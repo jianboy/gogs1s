@@ -1,22 +1,22 @@
 {
-  "name": "github1s",
-  "version": "0.0.0",
-  "publisher": "github1s",
-  "description": "",
+  "name": "gogs1s",
+  "version": "1.0.0",
+  "publisher": "liuyuqi.gov@msn.cn",
+  "description": "code quick preview on gogs project system.",
   "private": true,
   "enableProposedApi": true,
   "directories": {
     "lib": "lib"
   },
   "activationEvents": [
-    "onFileSystem:github1s",
-    "onCommand:github1s.validate-token",
-    "onCommand:github1s.update-token",
-    "onCommand:github1s.clear-token",
-    "onCommand:github1s.get-current-authority",
-    "onCommand:github1s.switch-branch",
-    "onCommand:github1s.switch-tag",
-    "onView:github1s"
+    "onFileSystem:gogs1s",
+    "onCommand:gogs1s.validate-token",
+    "onCommand:gogs1s.update-token",
+    "onCommand:gogs1s.clear-token",
+    "onCommand:gogs1s.get-current-authority",
+    "onCommand:gogs1s.switch-branch",
+    "onCommand:gogs1s.switch-tag",
+    "onView:gogs1s"
   ],
   "browser": "./dist/extension",
   "engines": {
@@ -26,16 +26,16 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "github1s",
-          "title": "GitHub1s",
-          "icon": "assets/github1s.svg"
+          "id": "gogs1s",
+          "title": "gogs1s",
+          "icon": "assets/gogs1s.svg"
         }
       ]
     },
     "views": {
-      "github1s": [
+      "gogs1s": [
         {
-          "id": "github1s-settings",
+          "id": "gogs1s-settings",
           "name": "Settings",
           "type": "webview"
         }
@@ -43,29 +43,29 @@
     },
     "commands": [
       {
-        "command": "github1s.update-token",
+        "command": "gogs1s.update-token",
         "title": "Update GitHub OAuth Token",
-        "category": "GitHub1s"
+        "category": "gogs1s"
       },
       {
-        "command": "github1s.validate-token",
+        "command": "gogs1s.validate-token",
         "title": "Validate Current GitHub OAuth Token",
-        "category": "GitHub1s"
+        "category": "gogs1s"
       },
       {
-        "command": "github1s.clear-token",
+        "command": "gogs1s.clear-token",
         "title": "Clear Current GitHub OAuth Token",
-        "category": "GitHub1s"
+        "category": "gogs1s"
       },
       {
-        "command": "github1s.switch-branch",
+        "command": "gogs1s.switch-branch",
         "title": "Switch to Another Branch",
-        "category": "GitHub1s"
+        "category": "gogs1s"
       },
       {
-        "command": "github1s.switch-tag",
+        "command": "gogs1s.switch-tag",
         "title": "Switch to Another Tag",
-        "category": "GitHub1s"
+        "category": "gogs1s"
       }
     ]
   },
@@ -75,7 +75,9 @@
     "compile": "webpack --config extension.webpack.config.js --mode production",
     "dev": "webpack --config extension.webpack.config.js --watch"
   },
-  "keywords": [],
+  "keywords": [
+    "gogs",
+    "gogs1s"],
   "author": "",
   "license": "ISC",
   "dependencies": {
