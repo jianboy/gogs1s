@@ -44,18 +44,18 @@ const handleRequestError = (error: RequestError) => {
 };
 
 export const readGitHubDirectory = (owner: string, repo: string, ref: string, path: string) => {
-	return fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}${path.replace(/^\//, ':')}`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents/${path.replace(/^\//, ':')}`)
 		.catch(handleRequestError);
 };
 
 export const readGitHubFile = (owner: string, repo: string, fileSha: string) => {
-	return fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${fileSha}`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/blobs/${fileSha}`)
 		.catch(handleRequestError);
 };
 
 export const validateToken = (token: string) => {
 	const authHeaders = token ? { Authorization: `token ${token}` } : {};
-	return self.fetch(`https://api.github.com`, { headers: { ...authHeaders } }).then(response => ({
+	return self.fetch(`https://git.yoqi.me/api/v1`, { headers: { ...authHeaders } }).then(response => ({
 		token: !!token, // if the token is not empty
 		valid: response.status !== 401 ? true : false, // if the request is valid
 		limit: +response.headers.get('X-RateLimit-Limit') || 0, // limit count
@@ -68,11 +68,11 @@ export const validateToken = (token: string) => {
 };
 
 export const getGithubBranches = (owner: string, repo: string) => {
-	return fetch(`https://api.github.com/repos/${owner}/${repo}/branches?per_page=100`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/branches?per_page=100`)
 		.then(branches => {
 			// TODO: only no more than 200 branches are supported
 			if (branches.length === 100) {
-				return fetch(`https://api.github.com/repos/${owner}/${repo}/branches?per_page=100&page=2`).then(otherBranches => [...branches, ...otherBranches]);
+				return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/branches?per_page=100&page=2`).then(otherBranches => [...branches, ...otherBranches]);
 			}
 			return branches;
 		})
@@ -80,11 +80,11 @@ export const getGithubBranches = (owner: string, repo: string) => {
 };
 
 export const getGithubTags = (owner: string, repo: string) => {
-	return fetch(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=100`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags?per_page=100`)
 		.then(tags => {
 			// TODO: only no more than 200 tags are supported
 			if (tags.length === 100) {
-				return fetch(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=100&page=2`).then(otherTags => [...tags, ...otherTags]);
+				return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags?per_page=100&page=2`).then(otherTags => [...tags, ...otherTags]);
 			}
 			return tags;
 		})
@@ -92,7 +92,7 @@ export const getGithubTags = (owner: string, repo: string) => {
 };
 
 export const getGithubAllFiles = (owner: string, repo: string, ref: string, path: string = '/') => {
-	return fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}${path.replace(/^\//, ':')}?recursive=1`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}${path.replace(/^\//, ':')}?recursive=1`)
 		.catch(handleRequestError);
 };
 

@@ -9,7 +9,7 @@ import { getExtensionContext } from './context';
 
 const getGitHubAuthToken = (): string => {
 	const context = getExtensionContext();
-	return context?.globalState.get('github-oauth-token') || '';
+	return context?.globalState.get('gogs-oauth-token') || '';
 };
 
 export class RequestError extends Error {
@@ -74,6 +74,6 @@ export const fetch = (url: string, options?: RequestInit) => {
 			if (response.status === 404) {
 				throw new RequestNotFoundError('Not Found', token);
 			}
-			throw new RequestError(`GitHub1s: Request got HTTP ${response.status} response`, token);
+			throw new RequestError(`Gogs1s: Request got HTTP ${response.status} response`, token);
 		});
 };

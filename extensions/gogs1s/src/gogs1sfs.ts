@@ -1,5 +1,5 @@
 /**
- * @file VSCode GitHub1sFs Provider
+ * @file VSCode Gogs1sFs Provider
  * @author netcon
  */
 
@@ -141,7 +141,7 @@ const insertGitHubGraphQLEntriesToDirectory = (entries: GithubGraphQLEntry[], pa
 	return map;
 };
 
-export class GitHub1sFS implements FileSystemProvider, FileSearchProvider, Disposable {
+export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposable {
 	static scheme = 'github1s';
 	private readonly disposable: Disposable;
 	private _emitter = new EventEmitter<FileChangeEvent[]>();
@@ -152,8 +152,8 @@ export class GitHub1sFS implements FileSystemProvider, FileSearchProvider, Dispo
 
 	constructor() {
 		this.disposable = Disposable.from(
-			workspace.registerFileSystemProvider(GitHub1sFS.scheme, this, { isCaseSensitive: true, isReadonly: true }),
-			workspace.registerFileSearchProvider(GitHub1sFS.scheme, this),
+			workspace.registerFileSystemProvider(Gogs1sFS.scheme, this, { isCaseSensitive: true, isReadonly: true }),
+			workspace.registerFileSearchProvider(Gogs1sFS.scheme, this),
 		);
 	}
 
@@ -307,7 +307,7 @@ export class GitHub1sFS implements FileSystemProvider, FileSearchProvider, Dispo
 				// the number of items in the tree array maybe exceeded maximum limit
 				// only update the rootDirectory if `treeData.truncated` is false
 
-				const rootDirectory = await this._lookupAsDirectory(Uri.parse('').with({ scheme: GitHub1sFS.scheme, authority, path: '/' }), false);
+				const rootDirectory = await this._lookupAsDirectory(Uri.parse('').with({ scheme: Gogs1sFS.scheme, authority, path: '/' }), false);
 				(treeData.tree || []).forEach((githubEntry: GithubRESTEntry) => {
 					insertGitHubRESTEntryToDirectory(githubEntry, rootDirectory);
 				});
@@ -321,7 +321,7 @@ export class GitHub1sFS implements FileSystemProvider, FileSearchProvider, Dispo
 	provideFileSearchResults(query: FileSearchQuery, _options: FileSearchOptions, _token: CancellationToken): ProviderResult<Uri[]> {
 		return getCurrentAuthority().then((authority) => this.getFuse(authority))
 		.then((fuse: Fuse<GithubRESTEntry>) => fuse.search(query.pattern).map((result) => {
-				return Uri.parse('').with({ scheme: GitHub1sFS.scheme, path: result.item.path });
+				return Uri.parse('').with({ scheme: Gogs1sFS.scheme, path: result.item.path });
 			})
 		);
 	}

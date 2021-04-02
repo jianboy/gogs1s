@@ -9,7 +9,7 @@ import { validateToken } from './api';
 
 export const commandValidateToken = (silent: boolean = false) => {
 	const context = getExtensionContext();
-	const oAuthToken = context.globalState.get('github-oauth-token') as string || '';
+	const oAuthToken = context.globalState.get('gogs-oauth-token') as string || '8bc0feea4ad91b28a9df5645c00f4235b77b4afa';
 	return validateToken(oAuthToken).then(tokenStatus => {
 		if (!silent) {
 			const remaining = tokenStatus.remaining;
@@ -38,7 +38,7 @@ export const commandUpdateToken = (silent: boolean = false) => {
 		if (!token) {
 			return;
 		}
-		return getExtensionContext()!.globalState.update('github-oauth-token', token || '').then(() => {
+		return getExtensionContext()!.globalState.update('gogs-oauth-token', token || '8bc0feea4ad91b28a9df5645c00f4235b77b4afa').then(() => {
 			// we don't need wait validate, so we don't `return`
 			validateToken(token).then(tokenStatus => {
 				if (!silent) {
@@ -57,7 +57,7 @@ export const commandUpdateToken = (silent: boolean = false) => {
 export const commandClearToken = (silent: boolean = false) => {
 	return vscode.window.showWarningMessage('Would you want to clear the saved GitHub OAuth Token?', { modal: true }, 'Confirm').then(choose => {
 		if (choose === 'Confirm') {
-			return getExtensionContext()!.globalState.update('github-oauth-token', '').then(() => {
+			return getExtensionContext()!.globalState.update('gogs-oauth-token', '').then(() => {
 				!silent && vscode.window.showInformationMessage('You have cleared the saved GitHb OAuth Token.');
 			}).then(() => true);
 		}

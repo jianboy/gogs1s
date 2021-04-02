@@ -17,7 +17,7 @@ export const getExtensionContext = (): vscode.ExtensionContext | null => {
 
 export const getOAuthToken = () => {
 	const context = getExtensionContext();
-	return context.globalState.get('github-oauth-token') as string || '';
+	return context.globalState.get('gogs-oauth-token') as string || '';
 };
 
 export const hasValidToken = () => getOAuthToken() !== '';

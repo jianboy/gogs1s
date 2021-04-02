@@ -50,7 +50,7 @@ export class SettingsView implements vscode.WebviewViewProvider {
 					vscode.commands.executeCommand('workbench.action.showWelcomePage');
 					break;
 				default:
-					const oauthToken = this._extensionContext.globalState.get('github-oauth-token') as string|| '';
+					const oauthToken = this._extensionContext.globalState.get('gogs-oauth-token') as string || '';
 					(oauthToken ? validateToken(oauthToken).then(data => (data.valid && data.remaining > 0)) : Promise.resolve(false)).then(isValid => {
 						this.updateWebviewState({ token: oauthToken, pageType: oauthToken ? 'PREVIEW' : 'EDIT', valid: isValid, validating: false });
 					});
@@ -90,7 +90,7 @@ export class SettingsView implements vscode.WebviewViewProvider {
 				vscode.window.showWarningMessage('This GitHub OAuth Token is valid, but the rate limit is exceeded.');
 			} else {
 				this.updateWebviewState({ token, valid: true, pageType: 'PREVIEW', validating: false });
-				this._extensionContext.globalState.update('github-oauth-token', token || '').then(() => {
+				this._extensionContext.globalState.update('gogs-oauth-token', token || '').then(() => {
 					vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 				});
 			}
@@ -266,7 +266,7 @@ button.secondary:hover {
 			<div>For API requests using Authentication, you can make up to 5,000 requests per hour.</div>
 		</div>
 		<div class="token-link">
-			<a href="https://github.com/settings/tokens/new?scopes=repo&description=GitHub1s" target="_blank">
+			<a href="https://git.yoqi.me/user/settings/applications" target="_blank">
 				Generate New OAuth Token
 			</a>
 		</div>
