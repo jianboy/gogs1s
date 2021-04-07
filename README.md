@@ -1,78 +1,8 @@
-![GitHub1s](https://raw.githubusercontent.com/conwnet/github1s/master/resources/images/logo.png)
-# github1s
+![Gogs1s](resources/images/logo.png)
+# Gogs1s
 
-One second to read GitHub code with VS Code.
-
-## Usage
-
-Just add `1s` after `github` and press `Enter` in the browser address bar for any repository you want to read.
-
-For example, try it on the VS Code repo:
-
-[https://github1s.com/microsoft/vscode](https://github1s.com/microsoft/vscode)
-
-![VS Code - GitHub1s](https://raw.githubusercontent.com/conwnet/github1s/master/resources/images/vs-code-github1s.png)
-
-For browser extensions, see [Third-party Related Projects](https://github.com/conwnet/github1s#third-party-related-projects).
-
-Or save the following code snippet as a bookmarklet (GitHub markdown doesn't allow js links, so just copy it into a bookmark).
-
-```
-javascript: window.location.href = window.location.href.replace('github.com', 'github1s.com')
-```
-
-## Documentation
-
-- [How it works](https://github.com/conwnet/github1s/blob/master/docs/guide.md)
+VSCode web online preview code for gogs.
 
 ## Screenshots
 
-![VS Code - GitHub1s](https://raw.githubusercontent.com/mohitjaisal/github1s/master/resources/images/Github1sDemo1.gif)
-
-![VS Code - GitHub1s](https://raw.githubusercontent.com/conwnet/github1s/master/resources/images/demo.png)
-
-## Development
-
-You need [these prerequisites (the same ones as for VS Code)](https://github.com/microsoft/vscode/wiki/How-to-Contribute#prerequisites) for development.
-
-```bash
-$ git clone git@github.com:conwnet/github1s.git
-$ cd github1s
-$ yarn
-$ yarn watch
-$ yarn serve # in another shell
-$ # Then visit http://localhost:5000 or http://localhost:5000/conwnet/github1s once the build is completed.
-```
-
-## Build
-
-```bash
-$ yarn
-$ yarn build
-```
-
-## Third-party Related Projects
-
-### Chrome Extensions
-
-- [zulhfreelancer](https://github.com/zulhfreelancer)/[Open in VS Code](https://chrome.google.com/webstore/detail/open-in-vs-code-github1sc/neloiopjjeflfnecdlajhopdlojlkhll)
-
-- [fhefh2015/GitHub1s_chrome_extension](https://github.com/fhefh2015/GitHub1s_chrome_extension) - [Chrome Web Store](https://chrome.google.com/webstore/detail/github1s/lodjfmkfbfkpdhnhkcdcoonghhghbkhe)
-
-- [febaoshan/edge-extensions-github-code-viewer](https://github.com/febaoshan/edge-extensions-github-code-viewer) - [Chrome Web Store](https://chrome.google.com/webstore/detail/github-code-viewer/ecddapgifccgblebfibdgkagfbdagjfn)
-
-- [Darkempire78/Github1s-Extension](https://github.com/Darkempire78/Github1s-Extension)
-- [zvizvi/Github Web IDE](https://github.com/zvizvi/github-web-ide) - [Chrome Web Store](https://chrome.google.com/webstore/detail/adjiklnjodbiaioggfpbpkhbfcnhgkfe)
-- [katsuhisa91/github1s-shortcut](https://github.com/katsuhisa91/github1s-shortcut) - [Chrome Web Store](https://chrome.google.com/webstore/detail/shortcut-to-github1s/gfcdbodapcbfckbfpmgeldfkkgjknceo)
-
-### Firefox Extensions
-
-- [Darkempire78/Github1s-Extension](https://github.com/Darkempire78/Github1s-Extension) - [Firefox Browser Addons](https://addons.mozilla.org/firefox/addon/github1s-extension)
-- [mcherifi/github1s-firefox-addon](https://github.com/mcherifi/github1s-firefox-addon) - [Firefox Browser Addons](https://addons.mozilla.org/firefox/addon/github1s/)
-- [zvizvi/Github Web IDE](https://github.com/zvizvi/github-web-ide) - [Firefox Browser Addons](https://addons.mozilla.org/firefox/addon/github-web-ide/)
-
-
-### Microsoft Edge Extensions
-
-- [febaoshan/edge-extensions-github-code-viewer](https://github.com/febaoshan/edge-extensions-github-code-viewer)
-- [zvizvi/Github Web IDE](https://github.com/zvizvi/github-web-ide)
+![VS Code - Gogs1s](resources/images/4.gif)
