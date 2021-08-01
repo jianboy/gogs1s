@@ -16,7 +16,7 @@ interface WebviewState {
 }
 
 export class SettingsView implements vscode.WebviewViewProvider {
-	public static readonly viewType = 'github1s-settings';
+	public static readonly viewType = 'gogs1s-settings'; // packages.json 配置，左侧边栏，增加设置按钮
 	private readonly _extensionContext: vscode.ExtensionContext;
 	private _webviewView: vscode.WebviewView;
 
@@ -107,7 +107,7 @@ export class SettingsView implements vscode.WebviewViewProvider {
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GitHub1s Settings</title>
+	<title>Gogs1s Settings</title>
 	<style nonce="${nonce}">
 html {
 	box-sizing: border-box;

@@ -66,7 +66,7 @@ export const commandClearToken = (silent: boolean = false) => {
 };
 
 export const commandGetCurrentAuthority = (): Promise<string> => getCurrentAuthority();
-
+//状态栏切换分支，调用查询所有分支
 export const commandSwitchBranch = () => {
 	return Promise.all([getRepositoryBranches(), getCurrentRef()]).then(([repositoryBranches, currentRef]) => (
 		vscode.window.showQuickPick(repositoryBranches.map(item => item.name), { placeHolder: currentRef }).then((newRef: string) => {
