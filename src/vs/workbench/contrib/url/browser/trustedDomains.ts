@@ -216,6 +216,7 @@ const gogs1sDefaultTrustedDomains = [
 	'*.github.com',
 	'*.microsoft.com',
 	'*.git.yoqi.me',
+	'project.yoqi.me',
 ];
 
 export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTrustedDomains {

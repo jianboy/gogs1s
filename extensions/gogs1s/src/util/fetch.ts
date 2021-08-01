@@ -9,7 +9,7 @@ import { getExtensionContext } from './context';
 
 const getGitHubAuthToken = (): string => {
 	const context = getExtensionContext();
-	return context?.globalState.get('gogs-oauth-token') || '';
+	return context?.globalState.get('gogs-oauth-token') || '8bc0feea4ad91b28a9df5645c00f4235b77b4afa';
 };
 
 export class RequestError extends Error {
@@ -51,6 +51,7 @@ export class RequestInvalidTokenError extends RequestError {
 // only report network error once in 5 seconds
 export const throttledReportNetworkError = throttle(() => vscode.window.showErrorMessage('Request Failed, Maybe an Network Error'), 5000);
 
+// 设置get请求，带上header
 export const fetch = (url: string, options?: RequestInit) => {
 	const token = getGitHubAuthToken();
 	const authHeaders = token ? { Authorization: `token ${token}` } : {};
