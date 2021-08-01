@@ -1,4 +1,4 @@
-.github1s-notification {
+.gogs1s-notification {
 	display: block;
 	position: fixed;
 	left: 0;
@@ -12,7 +12,7 @@
 	font-size: 14px;
 }
 
-.github1s-notification .notification-main {
+.gogs1s-notification .notification-main {
 	flex: 1;
 	padding: 0 20px;
 	display: flex;
@@ -20,7 +20,7 @@
 	justify-content: center;
 }
 
-.github1s-notification .notification-main .notification-title {
+.gogs1s-notification .notification-main .notification-title {
 	color: #ffe58f;
 	font-size: 16px;
 	margin-bottom: 2px;
@@ -29,7 +29,7 @@
 	text-overflow: ellipsis;
 }
 
-.github1s-notification .notification-main .notification-content {
+.gogs1s-notification .notification-main .notification-content {
 	color: #ccc;
 	font-size: 13px;
 	overflow: hidden;
@@ -37,17 +37,17 @@
 	text-overflow: ellipsis;
 }
 
-.github1s-notification .notification-main .notification-link {
+.gogs1s-notification .notification-main .notification-link {
 	color: #3794ff;
 	text-decoration: none;
 }
 
-.github1s-notification .notification-main .notification-link:focus {
+.gogs1s-notification .notification-main .notification-link:focus {
 	outline: 1px solid #007fd4;
 	outline-offset: -1px;
 }
 
-.github1s-notification .notification-footer {
+.gogs1s-notification .notification-footer {
 	padding-right: 20px;
 	display: flex;
 	flex-direction: column;
@@ -55,7 +55,7 @@
 	min-width: 140px;
 }
 
-.github1s-notification .notification-footer .notification-confirm-button {
+.gogs1s-notification .notification-footer .notification-confirm-button {
 	border: none;
 	width: 100%;
 	height: 26px;
@@ -68,15 +68,15 @@
 	cursor: pointer;
 }
 
-.github1s-notification .notification-footer .notification-confirm-button:hover {
+.gogs1s-notification .notification-footer .notification-confirm-button:hover {
 	background-color: #1177bb;
 }
 
-.github1s-notification .notification-footer .notification-confirm-button:focus {
+.gogs1s-notification .notification-footer .notification-confirm-button:focus {
 	outline-color: #007fd4;
 }
 
-.github1s-notification .notification-footer .notification-show-me-again {
+.gogs1s-notification .notification-footer .notification-show-me-again {
 	color: #ccc;
 	font-size: 12px;
 	display: flex;

@@ -5,7 +5,7 @@ cd "$(dirname "${0}")/.."
 APP_ROOT=$(pwd)
 
 function main() {
-	# install github1s extensions dependencies
+	# install gogs1s extensions dependencies
 	for entry in "${APP_ROOT}/extensions"/*
 	do
 		if [ -f "$entry/package.json" ]

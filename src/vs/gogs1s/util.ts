@@ -2,7 +2,7 @@
  * @file github1s common utils
  * @autor netcon
  */
-
+// http://code.git.yoqi.me/lyq/hosts.deny
 export const getBrowserUrl = (): string => {
 	return window.location.href;
 };

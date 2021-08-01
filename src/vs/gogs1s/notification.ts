@@ -5,14 +5,14 @@
 
 import 'vs/css!./notification';
 
-const NOTIFICATION_STORAGE_KEY = 'GITHUB1S_NOTIFICATION';
+const NOTIFICATION_STORAGE_KEY = 'GOGS1S_NOTIFICATION';
 // change it if a new notification should be shown
-const NOTIFICATION_STORAGE_VALUE = '20210212';
+const NOTIFICATION_STORAGE_VALUE = '20210801';
 
 const notification = {
-	title: 'ATTENTION: This page is NOT officially provided by GitHub.',
-	content: 'GitHub1s is an open source project, which is not officially provided by GitHub.',
-	link: 'https://github.com/conwnet/github1s',
+	title: 'ATTENTION: This page is officially provided by liuyuqi.gov@msn.cn.',
+	content: 'Gogs1s is an open source project, which is officially provided by liuyuqi.gov@msn.cn.',
+	link: 'https://github.com/jianboy/gogs1s',
 };
 
 const notificationHtml = `
@@ -38,7 +38,7 @@ export const renderNotification = () => {
 	}
 
 	const notificationElement = <HTMLDivElement>document.createElement('div');
-	notificationElement.classList.add('github1s-notification');
+	notificationElement.classList.add('gogs1s-notification');//增加样式，notification.css class定位
 	notificationElement.innerHTML = notificationHtml;
 	document.body.appendChild(notificationElement);
 

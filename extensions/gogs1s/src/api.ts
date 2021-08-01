@@ -42,14 +42,14 @@ const handleRequestError = (error: RequestError) => {
 	}
 	throw vscode.FileSystemError.Unavailable(error.message || 'Unknown Error Occurred When Request To GitHub');
 };
-
+//目录和文件同一个接口，目录返回list，接口返回object
 export const readGitHubDirectory = (owner: string, repo: string, ref: string, path: string) => {
-	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents/${path.replace(/^\//, ':')}`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents/${path.replace(/^\//, ':')}?ref=${ref}`)
 		.catch(handleRequestError);
 };
 
-export const readGitHubFile = (owner: string, repo: string, fileSha: string) => {
-	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/blobs/${fileSha}`)
+export const readGitHubFile = (owner: string, repo: string, ref: string, path: string) => {
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents/${path.replace(/^\//, ':')}?ref=${ref}`)
 		.catch(handleRequestError);
 };
 
@@ -68,29 +68,21 @@ export const validateToken = (token: string) => {
 };
 
 export const getGithubBranches = (owner: string, repo: string) => {
-	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/branches?per_page=100`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/branches`)
 		.then(branches => {
-			// TODO: only no more than 200 branches are supported
-			if (branches.length === 100) {
-				return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/branches?per_page=100&page=2`).then(otherBranches => [...branches, ...otherBranches]);
-			}
 			return branches;
 		})
 		.catch(handleRequestError);
 };
-
+// 暂时没有tags接口
 export const getGithubTags = (owner: string, repo: string) => {
-	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags?per_page=100`)
+	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags`)
 		.then(tags => {
-			// TODO: only no more than 200 tags are supported
-			if (tags.length === 100) {
-				return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags?per_page=100&page=2`).then(otherTags => [...tags, ...otherTags]);
-			}
 			return tags;
 		})
 		.catch(handleRequestError);
 };
-
+// GET /repos/:owner/:repo/git/trees/:sha
 export const getGithubAllFiles = (owner: string, repo: string, ref: string, path: string = '/') => {
 	return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}${path.replace(/^\//, ':')}?recursive=1`)
 		.catch(handleRequestError);
