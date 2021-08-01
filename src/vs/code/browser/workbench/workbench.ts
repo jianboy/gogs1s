@@ -22,7 +22,7 @@ import { getBrowserUrl, replaceBrowserUrl } from 'vs/gogs1s/util';
 import { renderNotification } from 'vs/gogs1s/notification';
 
 // custom vs code commands defined by gogs1s
-const getGitHub1sCustomCommands: () => ({id: string, handler: (...args: any[]) => unknown }[]) = () => [
+const getGogs1sCustomCommands: () => ({id: string, handler: (...args: any[]) => unknown }[]) = () => [
 	{ id: 'gogs1s.vscode.get-browser-url', handler: getBrowserUrl },
 	{ id: 'gogs1s.vscode.replace-browser-url', handler: replaceBrowserUrl },
 ];
@@ -533,7 +533,7 @@ class WindowIndicator implements IWindowIndicator {
 	// Finally create workbench
 	create(document.body, {
 		...config,
-		commands: getGitHub1sCustomCommands(),
+		commands: getGogs1sCustomCommands(),
 		logLevel: logLevel ? parseLogLevel(logLevel) : undefined,
 		settingsSyncOptions,
 		homeIndicator,

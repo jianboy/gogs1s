@@ -14,5 +14,5 @@ if [ -e "${APP_ROOT}/dist/static" ]; then
 	rm -f "${APP_ROOT}/dist/index.html" # remove the exists `index.html` file
 	echo "hash static files done"
 else
-	echo "Please build github1s first"
+	echo "Please build gogs1s first"
 fi

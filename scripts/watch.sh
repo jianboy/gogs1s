@@ -10,16 +10,16 @@ function watch_vscode() {
 	echo "watching vscode"
 }
 
-function watch_github1s() {
+function watch_gogs1s() {
 	cd ${APP_ROOT}/scripts/watch
 	node watch-src.js 2>&1 > /dev/null &
-	echo "watching github1s"
+	echo "watching gogs1s"
 }
 
-function watch_github1s_extension() {
+function watch_gogs1s_extension() {
 	cd ${APP_ROOT}/extensions/gogs1s
 	yarn dev 2>&1 > /dev/null &
-	echo "watching github1s_extensions"
+	echo "watching gogs1s_extensions"
 }
 
 function watch_dist() {
@@ -37,8 +37,8 @@ function main() {
 	./package/copy-extensions.sh
 	node ./package/generate-config.js
 	watch_vscode
-	watch_github1s
-	watch_github1s_extension
+	watch_gogs1s
+	watch_gogs1s_extension
 
 	echo 'please waiting...'
 	while [ ! -e "${APP_ROOT}/lib/vscode/out" ]
