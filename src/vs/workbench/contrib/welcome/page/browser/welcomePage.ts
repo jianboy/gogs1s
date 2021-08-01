@@ -47,7 +47,7 @@ import { IEditorOptions } from 'vs/platform/editor/common/editor';
 import { IWorkbenchLayoutService } from 'vs/workbench/services/layout/browser/layoutService';
 import { IViewletService } from 'vs/workbench/services/viewlet/browser/viewlet';
 import { buttonBackground, buttonHoverBackground, welcomePageBackground } from 'vs/workbench/contrib/welcome/page/browser/welcomePageColors';
-import { replaceBrowserUrl } from 'vs/github1s/util';
+import { replaceBrowserUrl } from 'vs/gogs1s/util';
 
 const configurationKey = 'workbench.startupEditor';
 const oldConfigurationKey = 'workbench.welcome.enabled';
@@ -82,8 +82,8 @@ export class WelcomePageContribution implements IWorkbenchContribution {
 			const activeResource = editorService.activeEditor?.resource;
 			getCurrentAuthority(commandService).then((authority: string) => {
 				const fileState = getCurrentFileState(authority.split('+')[2]);
-				if (fileState.path !== '/' && (!activeResource || activeResource.scheme !== 'github1s' || activeResource.path !== fileState.path)) {
-					const currentFileUri = URI.from({ scheme: 'github1s', authority, path: fileState.path });
+				if (fileState.path !== '/' && (!activeResource || activeResource.scheme !== 'gogs1s' || activeResource.path !== fileState.path)) {
+					const currentFileUri = URI.from({ scheme: 'gogs1s', authority, path: fileState.path });
 					fileService.resolve(currentFileUri)
 						.then(() => this.commandService.executeCommand(fileState.type === 'tree' ? 'revealInExplorer' : 'vscode.open', currentFileUri))
 						.then(() => this.registerListeners(), () => this.registerListeners());
@@ -128,7 +128,7 @@ export class WelcomePageContribution implements IWorkbenchContribution {
 	}
 
 	private getGitHubFilePathOrEmpty(uri?: URI): string {
-		if (!uri || !uri.path || uri.scheme !== 'github1s') {
+		if (!uri || !uri.path || uri.scheme !== 'gogs1s') {
 			return '';
 		}
 		return uri.path.startsWith('/') ? uri.path : `/${uri.path}`;
@@ -164,7 +164,7 @@ function isWelcomePageEnabled(configurationService: IConfigurationService, conte
 }
 
 function getCurrentAuthority(commandService: ICommandService): Promise<string> {
-	return commandService.executeCommand('github1s.get-current-authority') as Promise<string>;
+	return commandService.executeCommand('gogs1s.get-current-authority') as Promise<string>;
 }
 
 export class WelcomePageAction extends Action {
@@ -368,7 +368,7 @@ class WelcomePage extends Disposable {
 		}
 
 		gitHubTokenStatus.then(tokenStatus => this.doUpdateGitHubTokenStatus(container, tokenStatus));
-		this.registerGitHub1sListeners(container);
+		this.registerGogs1sListeners(container);//增加监听
 
 		recentlyOpened.then(({ workspaces }) => {
 			// Filter out the current workspace
@@ -410,11 +410,11 @@ class WelcomePage extends Disposable {
 		}));
 	}
 
-	registerGitHub1sListeners(container: HTMLElement) {
+	registerGogs1sListeners(container: HTMLElement) {
 		container.querySelector('.refresh-button')?.addEventListener('click', () => this.refreshGitHubTokenStatus(container));
-		container.querySelector('.create-new-token')?.addEventListener('click', () => window?.open('https://github.com/settings/tokens/new?scopes=repo&description=GitHub1s'));
-		container.querySelector('.update-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('github1s.update-token').then(() => this.refreshGitHubTokenStatus(container)));
-		container.querySelector('.clear-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('github1s.clear-token').then(() => this.refreshGitHubTokenStatus(container)));
+		container.querySelector('.create-new-token')?.addEventListener('click', () => window?.open('https://git.yoqi.me/user/settings/applications'));
+		container.querySelector('.update-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.update-token').then(() => this.refreshGitHubTokenStatus(container)));
+		container.querySelector('.clear-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.clear-token').then(() => this.refreshGitHubTokenStatus(container)));
 	}
 
 	updateElementText(element: HTMLElement, text: string | number, type?: 'SUCCESS' | 'WARNING' | 'ERROR') {
@@ -433,7 +433,7 @@ class WelcomePage extends Disposable {
 	}
 
 	getGitHubTokenStatus() {
-		return this.commandService.executeCommand('github1s.validate-token', true);
+		return this.commandService.executeCommand('gogs1s.validate-token', true);
 	}
 
 	refreshGitHubTokenStatus(container: HTMLElement) {

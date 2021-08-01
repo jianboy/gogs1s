@@ -17,7 +17,7 @@ function watch_github1s() {
 }
 
 function watch_github1s_extension() {
-	cd ${APP_ROOT}/extensions/github1s
+	cd ${APP_ROOT}/extensions/gogs1s
 	yarn dev 2>&1 > /dev/null &
 	echo "watching github1s_extensions"
 }
