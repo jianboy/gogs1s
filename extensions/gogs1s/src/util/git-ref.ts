@@ -20,7 +20,7 @@ export interface RepositoryBranch {
 export interface RepositoryTag {
 	name: string,
 	commit: {
-		sha: string,
+		id: string,
 		url:  string,
 	},
 	zipball_url: string,
@@ -50,7 +50,7 @@ const getRepositoryBranchesFromUri = reuseable((uri: vscode.Uri, forceUpdate: bo
 	if (repositoryBranches && repositoryBranches.length && !forceUpdate) {
 		return Promise.resolve(repositoryBranches);
 	}
-	const [owner = 'lyq', repo = 'gogs1s'] = uri.path.split('/').filter(Boolean);
+	const [owner = 'lyq', repo = 'github-hosts'] = uri.path.split('/').filter(Boolean);
 	return getGithubBranches(owner, repo).then(githubBranches => (repositoryBranches = githubBranches));
 });
 
@@ -58,7 +58,7 @@ export const getRepositoryBranches = reuseable((forceUpdate: boolean = false): P
 	return getBrowserUri().then(uri => getRepositoryBranchesFromUri(uri, forceUpdate));
 });
 
-const getRepositoryTagsFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolean = false): Promise<RepositoryBranch[]> => {
+const getRepositoryTagsFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolean = false): Promise<RepositoryTag[]> => {
 	// use the cached tags if already fetched and not forceUpdate
 	if (repositoryTags && repositoryTags.length && !forceUpdate) {
 		return Promise.resolve(repositoryTags);

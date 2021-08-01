@@ -18,11 +18,14 @@ GitHub1s is a purely static web app (because it really doesn't need a backend se
 # Development
 
 先安装：
-apt update
-apt install rsync
-apt install -y g++ gcc make python2.7 pkg-config libx11-dev libxkbfile-dev libsecret-1-dev
+```
+sudo apt update
+sudo apt install -y rsync
+sudo apt install -y g++ gcc make python2.7 pkg-config libx11-dev libxkbfile-dev libsecret-1-dev
 
-apt-get install build-essential
+sudo apt-get install build-essential
+```
+
 
 scripts/postinstall.sh
 
