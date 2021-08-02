@@ -34,11 +34,11 @@ let currentRef = '';
 let repositoryBranches: RepositoryBranch[] = null;
 let repositoryTags: RepositoryTag[] = null;
 
-// get current browser uri, update `currentOwner` and `currentRepo`
+// get current browser uri, update `currentOwner` and `currentRepo` api入口
 const getBrowserUri = (): Promise<vscode.Uri> => {
 	return (vscode.commands.executeCommand('gogs1s.vscode.get-browser-url') as Promise<string>).then(browserUrl => {
 		const browserUri = vscode.Uri.parse(browserUrl);
-		const [owner = 'lyq', repo = 'gogs1s'] = browserUri.path.split('/').filter(Boolean);
+		const [owner = 'lyq', repo = 'github-host'] = browserUri.path.split('/').filter(Boolean);
 		currentOwner = owner;
 		currentRepo = repo;
 		return browserUri;
@@ -50,7 +50,7 @@ const getRepositoryBranchesFromUri = reuseable((uri: vscode.Uri, forceUpdate: bo
 	if (repositoryBranches && repositoryBranches.length && !forceUpdate) {
 		return Promise.resolve(repositoryBranches);
 	}
-	const [owner = 'lyq', repo = 'github-hosts'] = uri.path.split('/').filter(Boolean);
+	const [owner = 'lyq', repo = 'github-host'] = uri.path.split('/').filter(Boolean);
 	return getGithubBranches(owner, repo).then(githubBranches => (repositoryBranches = githubBranches));
 });
 
@@ -63,7 +63,7 @@ const getRepositoryTagsFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolea
 	if (repositoryTags && repositoryTags.length && !forceUpdate) {
 		return Promise.resolve(repositoryTags);
 	}
-	const [owner = 'lyq', repo = 'github-hosts'] = uri.path.split('/').filter(Boolean);
+	const [owner = 'lyq', repo = 'github-host'] = uri.path.split('/').filter(Boolean);
 	return getGithubTags(owner, repo).then(githubTags => (repositoryTags = githubTags));
 });
 
