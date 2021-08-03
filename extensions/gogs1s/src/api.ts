@@ -56,19 +56,15 @@ export const readGitHubFile = (owner: string, repo: string, ref: string, path: s
 	}
 	return fetch(url).catch(handleRequestError);
 };
-
+//没有这个接口
 export const validateToken = (token: string) => {
-	const authHeaders = token ? { Authorization: `token ${token}` } : {};
-	return self.fetch(`https://git.yoqi.me/api/v1`, { headers: { ...authHeaders } }).then(response => ({
-		token: !!token, // if the token is not empty
-		valid: response.status !== 401 ? true : false, // if the request is valid
-		limit: +response.headers.get('X-RateLimit-Limit') || 0, // limit count
-		remaining: +response.headers.get('X-RateLimit-Remaining') || 0, // remains request count
-		reset: +response.headers.get('X-RateLimit-Reset') || 0, // reset time
-	})).catch(() => {
-		throttledReportNetworkError();
-		throw new RequestError('Request Failed, Maybe an Network Error', token);
-	});
+	return {
+		token: token,
+		valid: true,
+		limit: 0,
+		remaining: 0,
+		reset: 0
+	};
 };
 
 export const getGithubBranches = (owner: string, repo: string) => {

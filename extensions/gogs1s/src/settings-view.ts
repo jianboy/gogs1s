@@ -66,11 +66,11 @@ export class SettingsView implements vscode.WebviewViewProvider {
 		this.updateWebviewState({ validating: true });
 		validateToken(token).then(tokenStatus => {
 			if (!tokenStatus.valid) {
-				vscode.window.showErrorMessage('This GitHub OAuth Token is invalid.');
+				vscode.window.showErrorMessage('This OAuth Token is invalid.');
 			} else if (tokenStatus.remaining <= 0) {
-				vscode.window.showWarningMessage('This GitHub OAuth Token is valid, but the rate limit is exceeded.');
+				vscode.window.showWarningMessage('This OAuth Token is valid, but the rate limit is exceeded.');
 			} else {
-				vscode.window.showInformationMessage('This GitHub OAuth Token is OK.');
+				vscode.window.showInformationMessage('This OAuth Token is OK.');
 			}
 			this.updateWebviewState({ valid: tokenStatus.valid && tokenStatus.remaining > 0, validating: false });
 		}).catch(() => this.updateWebviewState({ valid: false, validating: false }));
@@ -84,10 +84,10 @@ export class SettingsView implements vscode.WebviewViewProvider {
 		validateToken(token).then(tokenStatus => {
 			if (!tokenStatus.valid) {
 				this.updateWebviewState({ pageType: 'EDIT', validating: false });
-				vscode.window.showErrorMessage('This GitHub OAuth Token is invalid.');
+				vscode.window.showErrorMessage('This OAuth Token is invalid.');
 			} else if (tokenStatus.remaining <= 0) {
 				this.updateWebviewState({ pageType: 'EDIT', validating: false });
-				vscode.window.showWarningMessage('This GitHub OAuth Token is valid, but the rate limit is exceeded.');
+				vscode.window.showWarningMessage('This OAuth Token is valid, but the rate limit is exceeded.');
 			} else {
 				this.updateWebviewState({ token, valid: true, pageType: 'PREVIEW', validating: false });
 				this._extensionContext.globalState.update('gogs-oauth-token', token || '').then(() => {

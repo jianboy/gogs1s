@@ -34,7 +34,7 @@ let currentRef = '';
 let repositoryBranches: RepositoryBranch[] = null;
 let repositoryTags: RepositoryTag[] = null;
 
-// get current browser uri, update `currentOwner` and `currentRepo` api入口
+// get current browser uri, update `currentOwner` and `currentRepo` 首先根据url路径获取 owner 和 repo
 const getBrowserUri = (): Promise<vscode.Uri> => {
 	return (vscode.commands.executeCommand('gogs1s.vscode.get-browser-url') as Promise<string>).then(browserUrl => {
 		const browserUri = vscode.Uri.parse(browserUrl);
