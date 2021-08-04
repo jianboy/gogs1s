@@ -86,9 +86,9 @@
 		 })
 		 .catch(handleRequestError);
  };
- // GET /repos/:owner/:repo/git/trees/:sha
+ // GET /repos/:owner/:repo/git/trees/:sha 默认获取所有文件
  export const getGithubAllFiles = (owner: string, repo: string, ref: string, path: string = '/') => {
-	 return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}${path.replace(/^\//, ':')}?recursive=1`)
+	 return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`)
 		 .catch(handleRequestError);
  };
  
