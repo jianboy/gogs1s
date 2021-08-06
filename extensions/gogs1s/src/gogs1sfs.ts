@@ -142,7 +142,7 @@ const insertGitHubGraphQLEntriesToDirectory = (entries: GithubGraphQLEntry[], pa
 };
 
 export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposable {
-	static scheme = 'github1s';
+	static scheme = 'gogs1s';
 	private readonly disposable: Disposable;
 	private _emitter = new EventEmitter<FileChangeEvent[]>();
 	private root: Map<string, Directory | File> = new Map();
@@ -263,8 +263,8 @@ export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposa
 			 *   1. The GraphQL query is disabled
 			 *   2. The GraphQL query is enabled, but the blob/file is binary
 			 */
-			const [owner, repo] = (uri.authority || await getCurrentAuthority()).split('+');
-			return readGitHubFile(owner, repo, file.sha).then(blob => {
+			const [owner, repo, ref] = (uri.authority || await getCurrentAuthority()).split('+');
+			return readGitHubFile(owner, repo, ref, uri.path).then(blob => {
 				file.data = decodeBase64(blob.content);
 				return file.data;
 			});

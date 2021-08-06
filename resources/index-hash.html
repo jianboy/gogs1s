@@ -15,7 +15,7 @@
 		<!-- Workbench Icon/Manifest/CSS -->
 		<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 		<link rel="manifest" href="/manifest.json">
-		<title>GitHub1s</title>
+		<title>Gogs1s</title>
 		<style>
 			#load-spinner {
 				width: 100vw;
@@ -151,8 +151,8 @@
 	<script>
 		fetch('/{STATIC_FOLDER}/configure/extensions.json').then(response => response.text()).then(extensionsJson => {
 			document.getElementById('vscode-workbench-web-configuration').setAttribute('data-settings', JSON.stringify({
-				// the empty authority means github1s should get it from `window.location.href`
-				folderUri: { scheme: "github1s", authority: '', path: '/' },
+				// the empty authority means gogs1s should get it from `window.location.href`
+				folderUri: { scheme: "gogs1s", authority: '', path: '/' },
 				staticExtensions: [],
 				enableSyncByDefault: false,
 				webviewEndpoint: window.location.origin + '/{STATIC_FOLDER}/vscode/vs/workbench/contrib/webview/browser/pre',

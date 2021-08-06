@@ -212,10 +212,11 @@ export async function readAuthenticationTrustedDomains(accessor: ServicesAccesso
 }
 
 // modify by vscode
-const github1sDefaultTrustedDomains = [
+const gogs1sDefaultTrustedDomains = [
 	'*.github.com',
 	'*.microsoft.com',
-	'*.github1s.com',
+	'*.git.yoqi.me',
+	'project.yoqi.me',
 ];
 
 export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTrustedDomains {
@@ -223,8 +224,8 @@ export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTru
 	const productService = accessor.get(IProductService);
 
 	const defaultTrustedDomains: string[] = productService.linkProtectionTrustedDomains
-		? [...productService.linkProtectionTrustedDomains, ...github1sDefaultTrustedDomains]
-		: [...github1sDefaultTrustedDomains];
+		? [...productService.linkProtectionTrustedDomains, ...gogs1sDefaultTrustedDomains]
+		: [...gogs1sDefaultTrustedDomains];
 
 	let trustedDomains: string[] = [];
 	try {

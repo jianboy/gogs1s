@@ -15,16 +15,16 @@ export const commandValidateToken = (silent: boolean = false) => {
 			const remaining = tokenStatus.remaining;
 			if (!oAuthToken) {
 				if (remaining > 0) {
-					vscode.window.showWarningMessage(`You haven\'t set a GitHub OAuth Token yet, and you can have ${remaining} requests in the current rate limit window.`);
+					vscode.window.showWarningMessage(`You haven\'t set a OAuth Token yet, and you can have ${remaining} requests in the current rate limit window.`);
 				} else {
-					vscode.window.showWarningMessage('You haven\'t set a GitHub OAuth Token yet, and the rate limit is exceeded.');
+					vscode.window.showWarningMessage('You haven\'t set a OAuth Token yet, and the rate limit is exceeded.');
 				}
 			} else if (!tokenStatus.valid) {
-				vscode.window.showErrorMessage('Current GitHub OAuth Token is invalid.');
+				vscode.window.showErrorMessage('Current OAuth Token is invalid.');
 			} else if (tokenStatus.valid && tokenStatus.remaining > 0) {
-				vscode.window.showInformationMessage(`Current GitHub OAuth Token is OK, and you can have ${remaining} requests in the current rate limit window.`);
+				vscode.window.showInformationMessage(`Current OAuth Token is OK, and you can have ${remaining} requests in the current rate limit window.`);
 			} else if (tokenStatus.valid && tokenStatus.remaining <= 0) {
-				vscode.window.showWarningMessage('Current GitHub OAuth Token is Valid, but the rate limit is exceeded.');
+				vscode.window.showWarningMessage('Current OAuth Token is Valid, but the rate limit is exceeded.');
 			}
 		}
 		return tokenStatus;
@@ -33,7 +33,7 @@ export const commandValidateToken = (silent: boolean = false) => {
 
 export const commandUpdateToken = (silent: boolean = false) => {
 	return vscode.window.showInputBox({
-		placeHolder: 'Please input the GitHub OAuth Token',
+		placeHolder: 'Please input the OAuth Token',
 	}).then(token => {
 		if (!token) {
 			return;
@@ -46,10 +46,10 @@ export const commandUpdateToken = (silent: boolean = false) => {
 };
 
 export const commandClearToken = (silent: boolean = false) => {
-	return vscode.window.showWarningMessage('Would you want to clear the saved GitHub OAuth Token?', { modal: true }, 'Confirm').then(choose => {
+	return vscode.window.showWarningMessage('Would you want to clear the saved OAuth Token?', { modal: true }, 'Confirm').then(choose => {
 		if (choose === 'Confirm') {
 			return getExtensionContext()!.globalState.update('gogs-oauth-token', '').then(() => {
-				!silent && vscode.window.showInformationMessage('You have cleared the saved GitHb OAuth Token.');
+				!silent && vscode.window.showInformationMessage('You have cleared the saved OAuth Token.');
 			}).then(() => true);
 		}
 		return false;
@@ -57,7 +57,7 @@ export const commandClearToken = (silent: boolean = false) => {
 };
 
 export const commandGetCurrentAuthority = (): Promise<string> => getCurrentAuthority();
-
+//状态栏切换分支，调用查询所有分支
 export const commandSwitchBranch = () => {
 	return Promise.all([getRepositoryBranches(), getCurrentRef()]).then(([repositoryBranches, currentRef]) => (
 		vscode.window.showQuickPick(repositoryBranches.map(item => item.name), { placeHolder: currentRef }).then((newRef: string) => {

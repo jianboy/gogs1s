@@ -10,8 +10,9 @@ import { getGithubBranches, getGithubTags } from '../api';
 export interface RepositoryBranch {
 	name: string,
 	commit: {
-		sha: string,
+		id: string,
 		url: string,
+		message: string,
 	},
 	protected?: boolean
 }
@@ -19,7 +20,7 @@ export interface RepositoryBranch {
 export interface RepositoryTag {
 	name: string,
 	commit: {
-		sha: string,
+		id: string,
 		url:  string,
 	},
 	zipball_url: string,
@@ -33,23 +34,23 @@ let currentRef = '';
 let repositoryBranches: RepositoryBranch[] = null;
 let repositoryTags: RepositoryTag[] = null;
 
-// get current browser uri, update `currentOwner` and `currentRepo`
+// get current browser uri, update `currentOwner` and `currentRepo` 首先根据url路径获取 owner 和 repo
 const getBrowserUri = (): Promise<vscode.Uri> => {
 	return (vscode.commands.executeCommand('gogs1s.vscode.get-browser-url') as Promise<string>).then(browserUrl => {
 		const browserUri = vscode.Uri.parse(browserUrl);
-		const [owner = 'lyq', repo = 'gogs1s'] = browserUri.path.split('/').filter(Boolean);
+		const [owner = 'lyq', repo = 'github-host'] = browserUri.path.split('/').filter(Boolean);
 		currentOwner = owner;
 		currentRepo = repo;
 		return browserUri;
 	});
 };
-
+// 获取所有分支
 const getRepositoryBranchesFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolean = false): Promise<RepositoryBranch[]> => {
 	// use the cached branches if already fetched and not forceUpdate
 	if (repositoryBranches && repositoryBranches.length && !forceUpdate) {
 		return Promise.resolve(repositoryBranches);
 	}
-	const [owner = 'lyq', repo = 'gogs1s'] = uri.path.split('/').filter(Boolean);
+	const [owner = 'lyq', repo = 'github-host'] = uri.path.split('/').filter(Boolean);
 	return getGithubBranches(owner, repo).then(githubBranches => (repositoryBranches = githubBranches));
 });
 
@@ -57,12 +58,12 @@ export const getRepositoryBranches = reuseable((forceUpdate: boolean = false): P
 	return getBrowserUri().then(uri => getRepositoryBranchesFromUri(uri, forceUpdate));
 });
 
-const getRepositoryTagsFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolean = false): Promise<RepositoryBranch[]> => {
+const getRepositoryTagsFromUri = reuseable((uri: vscode.Uri, forceUpdate: boolean = false): Promise<RepositoryTag[]> => {
 	// use the cached tags if already fetched and not forceUpdate
 	if (repositoryTags && repositoryTags.length && !forceUpdate) {
 		return Promise.resolve(repositoryTags);
 	}
-	const [owner = 'lyq', repo = 'gogs1s'] = uri.path.split('/').filter(Boolean);
+	const [owner = 'lyq', repo = 'github-host'] = uri.path.split('/').filter(Boolean);
 	return getGithubTags(owner, repo).then(githubTags => (repositoryTags = githubTags));
 });
 

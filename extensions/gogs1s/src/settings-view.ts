@@ -16,7 +16,7 @@ interface WebviewState {
 }
 
 export class SettingsView implements vscode.WebviewViewProvider {
-	public static readonly viewType = 'github1s-settings';
+	public static readonly viewType = 'gogs1s-settings'; // packages.json 配置，左侧边栏，增加设置按钮
 	private readonly _extensionContext: vscode.ExtensionContext;
 	private _webviewView: vscode.WebviewView;
 
@@ -66,11 +66,11 @@ export class SettingsView implements vscode.WebviewViewProvider {
 		this.updateWebviewState({ validating: true });
 		validateToken(token).then(tokenStatus => {
 			if (!tokenStatus.valid) {
-				vscode.window.showErrorMessage('This GitHub OAuth Token is invalid.');
+				vscode.window.showErrorMessage('This OAuth Token is invalid.');
 			} else if (tokenStatus.remaining <= 0) {
-				vscode.window.showWarningMessage('This GitHub OAuth Token is valid, but the rate limit is exceeded.');
+				vscode.window.showWarningMessage('This OAuth Token is valid, but the rate limit is exceeded.');
 			} else {
-				vscode.window.showInformationMessage('This GitHub OAuth Token is OK.');
+				vscode.window.showInformationMessage('This OAuth Token is OK.');
 			}
 			this.updateWebviewState({ valid: tokenStatus.valid && tokenStatus.remaining > 0, validating: false });
 		}).catch(() => this.updateWebviewState({ valid: false, validating: false }));
@@ -97,7 +97,7 @@ export class SettingsView implements vscode.WebviewViewProvider {
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GitHub1s Settings</title>
+	<title>Gogs1s Settings</title>
 	<style nonce="${nonce}">
 html {
 	box-sizing: border-box;

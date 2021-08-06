@@ -24,8 +24,8 @@ if (isWeb || typeof require === 'undefined' || typeof require.__$__nodeRequire !
 			// modify-by-github1s, change window title
 			// nameShort: isWeb ? 'Code Web - OSS Dev' : 'Code - OSS Dev',
 			// nameLong: isWeb ? 'Code Web - OSS Dev' : 'Code - OSS Dev',
-			nameShort: 'GitHub1s',
-			nameLong: 'GitHub1s',
+			nameShort: 'Gogs1s',// web版本时候，显示 Gogs1s 名称
+			nameLong: 'Gogs1s',
 			applicationName: 'code-oss',
 			dataFolderName: '.vscode-oss',
 			urlProtocol: 'code-oss',

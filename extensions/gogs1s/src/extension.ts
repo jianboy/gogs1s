@@ -20,5 +20,5 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.clear-token', commandClearToken));
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.get-current-authority', commandGetCurrentAuthority));
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.switch-branch', commandSwitchBranch));
-	context.subscriptions.push(vscode.commands.registerCommand('github1s.switch-tag', commandSwitchTag));
+	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.switch-tag', commandSwitchTag));
 }
