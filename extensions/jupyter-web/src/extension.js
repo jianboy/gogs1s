@@ -2,7 +2,7 @@ import vscode from "vscode";
 
 vscode.commands.registerCommand("jupyter.showPreview", async function (uri) {
 	try {
-		const authority = await vscode.commands.executeCommand('github1s.get-current-authority');
+		const authority = await vscode.commands.executeCommand('gogs1s.get-current-authority');
 		// TODO: It may not work fine when there are special characters in `ref` or `path`
 		const  [owner, repo, ref] = (authority || "").split('+').filter(Boolean);
 		const path = uri.path;
