@@ -40,16 +40,7 @@ export const commandUpdateToken = (silent: boolean = false) => {
 		}
 		return getExtensionContext()!.globalState.update('gogs-oauth-token', token || '8bc0feea4ad91b28a9df5645c00f4235b77b4afa').then(() => {
 			// we don't need wait validate, so we don't `return`
-			validateToken(token).then(tokenStatus => {
-				if (!silent) {
-					if (!tokenStatus.valid) {vscode.window.showErrorMessage('GitHub OAuth Token have updated, but it is invalid.');}
-					else if (tokenStatus.remaining <= 0) {vscode.window.showWarningMessage('GitHub OAuth Token have updated, but the rate limit is exceeded.');}
-					else {
-						vscode.window.showInformationMessage('GitHub OAuth Token have updated.');
-					}
-				}
-				tokenStatus.valid && tokenStatus.remaining > 0 && vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-			});
+			vscode.window.showWarningMessage('OAuth Token have updated.');
 		});
 	});
 };

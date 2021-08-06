@@ -81,20 +81,10 @@ export class SettingsView implements vscode.WebviewViewProvider {
 			return;
 		}
 		this.updateWebviewState({ validating: true });
-		validateToken(token).then(tokenStatus => {
-			if (!tokenStatus.valid) {
-				this.updateWebviewState({ pageType: 'EDIT', validating: false });
-				vscode.window.showErrorMessage('This GitHub OAuth Token is invalid.');
-			} else if (tokenStatus.remaining <= 0) {
-				this.updateWebviewState({ pageType: 'EDIT', validating: false });
-				vscode.window.showWarningMessage('This GitHub OAuth Token is valid, but the rate limit is exceeded.');
-			} else {
-				this.updateWebviewState({ token, valid: true, pageType: 'PREVIEW', validating: false });
-				this._extensionContext.globalState.update('gogs-oauth-token', token || '').then(() => {
-					vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-				});
-			}
-		}).catch(() => this.updateWebviewState({ token, validating: false }));
+		this.updateWebviewState({ token, valid: true, pageType: 'PREVIEW', validating: false });
+		this._extensionContext.globalState.update('gogs-oauth-token', token || '').then(() => {
+			vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+		});
 	}
 
 	_getHtmlForWebview(webview): string {
