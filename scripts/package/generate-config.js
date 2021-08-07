@@ -6,7 +6,7 @@ const path = require('path');
 const APP_ROOT = path.join(__dirname, '../..');
 const VSCODE_PATH = path.join(
 	APP_ROOT,
-	'node_modules/@gogs1s/vscode-web/dist'
+	'node_modules/@jianboy/vscode-web/dist'
 );
 const enableExtensions = require(path.join(
 	APP_ROOT,
