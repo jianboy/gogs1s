@@ -6,7 +6,7 @@ const fs = require('fs-extra');
 const cp = require('child_process');
 const util = require('util');
 
-const APP_ROOT = path.join(__dirname, '../..');
+const APP_ROOT = path.join(__dirname, '../../..');
 
 const debounce = (func, delay) => {
 	let timer = null;
@@ -23,35 +23,26 @@ const debounce = (func, delay) => {
 };
 
 const autoSyncVscodeOut = async () => {
-	const SOURCE = path.join(APP_ROOT, 'lib/vscode/out');
+	const SOURCE = path.join(APP_ROOT, 'vscode-web-gogs1s/lib/vscode/out');
 	const TARGET = path.join(APP_ROOT, 'dist/static/vscode');
 
-	await util.promisify(cp.exec)(`rsync -a ${SOURCE}/ ${TARGET}`);
+	await util
+		.promisify(cp.exec)(`rsync -a ${SOURCE}/ ${TARGET}`)
+		.catch(() => {});
 
-	chokidar.watch(SOURCE).on('all', debounce((_, path) => {
-		cp.exec(`rsync -a ${SOURCE}/ ${TARGET}`);
-		console.log(`sync ${path}`);
-	}, 300));
-};
-
-const autoSyncGogs1sExtension = async () => {
-	const SOURCE = path.join(APP_ROOT, 'extensions');
-	const TARGET = path.join(APP_ROOT, 'dist/static/extensions');
-
-	await util.promisify(cp.exec)(`rsync -a ${SOURCE}/ ${TARGET}`);
-
-	chokidar.watch(SOURCE).on('all', debounce((_, path) => {
-		cp.exec(`rsync -a ${SOURCE}/ ${TARGET}`);
-		console.log(`sync ${path}`);
-	}, 300));
+	chokidar.watch(SOURCE).on(
+		'all',
+		debounce((_, path) => {
+			cp.exec(`rsync -a ${SOURCE}/ ${TARGET}`);
+			console.log(`sync ${path}`);
+		}, 300)
+	);
 };
 
 const main = () => {
 	fs.ensureDirSync(path.join(APP_ROOT, 'dist/static'));
 
 	autoSyncVscodeOut();
-	autoSyncGogs1sExtension();
 };
 
 main();
-

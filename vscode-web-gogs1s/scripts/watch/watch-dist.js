@@ -23,7 +23,7 @@ const debounce = (func, delay) => {
 };
 
 const autoSyncVscodeOut = async () => {
-	const SOURCE = path.join(APP_ROOT, 'vscode-web-github1s/lib/vscode/out');
+	const SOURCE = path.join(APP_ROOT, 'vscode-web-gogs1s/lib/vscode/out');
 	const TARGET = path.join(APP_ROOT, 'dist/static/vscode');
 
 	await util
