@@ -43,8 +43,15 @@
 	 throw vscode.FileSystemError.Unavailable(error.message || 'Unknown Error Occurred When Request To GitHub');
  };
  //目录和文件同一个接口，目录返回list，接口返回object
- export const readGitHubDirectory = (owner: string, repo: string, ref: string, path: string) => {
-	 return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}`).catch(handleRequestError);
+export const readGitHubDirectory = (owner: string, repo: string, ref: string, path: string) => {
+	let url = "";
+	if (path == null || path == "/") {
+		url = `https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents?ref=${ref}`;
+	} else {
+		url = `https://git.yoqi.me/api/v1/repos/${owner}/${repo}/contents/${path}?ref=${ref}`;
+	}
+	return fetch(url).catch(handleRequestError);
+	//  return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/git/trees/${ref}`).catch(handleRequestError);
  };
  
  export const readGitHubFile = (owner: string, repo: string, ref: string, path: string) => {
