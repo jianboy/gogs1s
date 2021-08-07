@@ -5,7 +5,7 @@ cd "$(dirname "${0}")/.."
 APP_ROOT=$(pwd)
 
 function main() {
-	# install gogs1s extensions dependencies
+	# install github1s extensions dependencies
 	for entry in "${APP_ROOT}/extensions"/*
 	do
 		if [ -f "$entry/package.json" ]
@@ -15,16 +15,8 @@ function main() {
 		fi
 	done
 
-	# clone vscode and install dependencies
-	cd ${APP_ROOT}
-	if [ -d "lib/vscode" ]; then
-		echo "./lib/vscode already exists, skip clone."
-		exit 0
-	fi
-	mkdir -p lib
-	cd lib
-	git clone --depth 1 -b 1.52.1 https://github.com/microsoft/vscode.git vscode
-	cd vscode
+	# install dependencies for the @github1s/vscode-web
+	cd "${APP_ROOT}/vscode-web-gogs1s"
 	yarn --frozen-lockfile
 }
 
