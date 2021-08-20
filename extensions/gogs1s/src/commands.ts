@@ -91,7 +91,7 @@ export const commandCheckoutRef = async () => {
 		})
 	);
 	const tagPickerItems: vscode.QuickPickItem[] = tagRefs.map((tagRef) => ({
-		label: tagRef.name,
+		label: tagRef.tag_name,
 		description: `Tag at ${(tagRef.body)}`,
 	}));
 
