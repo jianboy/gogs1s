@@ -18,14 +18,6 @@ import { localize } from 'vs/nls';
 import { Schemas } from 'vs/base/common/network';
 import product from 'vs/platform/product/common/product';
 import { parseLogLevel } from 'vs/platform/log/common/log';
-import { getBrowserUrl, replaceBrowserUrl } from 'vs/gogs1s/util';
-import { renderNotification } from 'vs/gogs1s/notification';
-
-// custom vs code commands defined by gogs1s
-const getGogs1sCustomCommands: () => ({id: string, handler: (...args: any[]) => unknown }[]) = () => [
-	{ id: 'gogs1s.vscode.get-browser-url', handler: getBrowserUrl },
-	{ id: 'gogs1s.vscode.replace-browser-url', handler: replaceBrowserUrl },
-];
 
 function doCreateUri(path: string, queryValues: Map<string, string>): URI {
 	let query: string | undefined = undefined;
@@ -273,7 +265,6 @@ class PollingURLCallbackProvider extends Disposable implements IURLCallbackProvi
 			setTimeout(() => this.periodicFetchCallback(requestId, startTime), PollingURLCallbackProvider.FETCH_INTERVAL);
 		}
 	}
-
 }
 
 class WorkspaceProvider implements IWorkspaceProvider {
@@ -284,28 +275,35 @@ class WorkspaceProvider implements IWorkspaceProvider {
 
 	static QUERY_PARAM_PAYLOAD = 'payload';
 
+	readonly trusted = true;
+
 	constructor(
-		public readonly workspace: IWorkspace,
-		public readonly payload: object
+		readonly workspace: IWorkspace,
+		readonly payload: object
 	) { }
 
-	async open(workspace: IWorkspace, options?: { reuse?: boolean, payload?: object }): Promise<void> {
+	async open(workspace: IWorkspace, options?: { reuse?: boolean, payload?: object }): Promise<boolean> {
 		if (options?.reuse && !options.payload && this.isSame(this.workspace, workspace)) {
-			return; // return early if workspace and environment is not changing and we are reusing window
+			return true; // return early if workspace and environment is not changing and we are reusing window
 		}
 
 		const targetHref = this.createTargetUrl(workspace, options);
 		if (targetHref) {
 			if (options?.reuse) {
 				window.location.href = targetHref;
+				return true;
 			} else {
+				let result;
 				if (isStandalone) {
-					window.open(targetHref, '_blank', 'toolbar=no'); // ensures to open another 'standalone' window!
+					result = window.open(targetHref, '_blank', 'toolbar=no'); // ensures to open another 'standalone' window!
 				} else {
-					window.open(targetHref);
+					result = window.open(targetHref);
 				}
+
+				return !!result;
 			}
 		}
+		return false;
 	}
 
 	private createTargetUrl(workspace: IWorkspace, options?: { reuse?: boolean, payload?: object }): string | undefined {
@@ -385,21 +383,21 @@ class WindowIndicator implements IWindowIndicator {
 				uri = workspace.workspaceUri;
 			}
 
-			if (uri?.scheme === 'gogs1s') {
-				[repositoryOwner = 'lyq', repositoryName = 'github-host'] = URI.parse(getBrowserUrl()).path.split('/').filter(Boolean);
+			if (uri?.scheme === 'github' || uri?.scheme === 'codespace') {
+				[repositoryOwner, repositoryName] = uri.authority.split('+');
 			}
 		}
 
 		// Repo
 		if (repositoryName && repositoryOwner) {
-			this.label = localize('playgroundLabelRepository', "$(remote) Gogs1s: {0}/{1}", repositoryOwner, repositoryName);
-			this.tooltip = localize('playgroundRepositoryTooltip', "Gogs1s: {0}/{1}", repositoryOwner, repositoryName);
+			this.label = localize('playgroundLabelRepository', "$(remote) VS Code Web Playground: {0}/{1}", repositoryOwner, repositoryName);
+			this.tooltip = localize('playgroundRepositoryTooltip', "VS Code Web Playground: {0}/{1}", repositoryOwner, repositoryName);
 		}
 
 		// No Repo
 		else {
-			this.label = localize('playgroundLabel', "$(remote) Gogs1s");
-			this.tooltip = localize('playgroundTooltip', "Gogs1s");
+			this.label = localize('playgroundLabel', "$(remote) VS Code Web Playground");
+			this.tooltip = localize('playgroundTooltip', "VS Code Web Playground");
 		}
 	}
 }
@@ -414,13 +412,6 @@ class WindowIndicator implements IWindowIndicator {
 	}
 
 	const config: IWorkbenchConstructionOptions & { folderUri?: UriComponents, workspaceUri?: UriComponents } = JSON.parse(configElementAttribute);
-
-	// Revive static extension locations
-	if (Array.isArray(config.staticExtensions)) {
-		config.staticExtensions.forEach(extension => {
-			extension.extensionLocation = URI.revive(extension.extensionLocation);
-		});
-	}
 
 	// Find workspace to open and payload
 	let foundWorkspace = false;
@@ -481,10 +472,9 @@ class WindowIndicator implements IWindowIndicator {
 	const workspaceProvider = new WorkspaceProvider(workspace, payload);
 
 	// Home Indicator
-	const [repoOwner = 'lyq', repoName = 'github-host'] = (URI.parse(window.location.href).path || '').split('/').filter(Boolean);
 	const homeIndicator: IHomeIndicator = {
-		href: `https://git.yoqi.me/${repoOwner}/${repoName}`,
-		icon: 'github',
+		href: 'https://github.com/microsoft/vscode',
+		icon: 'code',
 		title: localize('home', "Home")
 	};
 
@@ -512,29 +502,15 @@ class WindowIndicator implements IWindowIndicator {
 	// settings sync options
 	const settingsSyncOptions: ISettingsSyncOptions | undefined = config.settingsSyncOptions ? {
 		enabled: config.settingsSyncOptions.enabled,
-		enablementHandler: (enablement) => {
-			let queryString = `settingsSync=${enablement ? 'true' : 'false'}`;
-
-			// Save all other query params we might have
-			const query = new URL(document.location.href).searchParams;
-			query.forEach((value, key) => {
-				if (key !== 'settingsSync') {
-					queryString += `&${key}=${value}`;
-				}
-			});
-
-			window.location.href = `${window.location.origin}?${queryString}`;
-		}
 	} : undefined;
-
-	// Remove the html load spinner
-	document.querySelector('#load-spinner')?.remove();
 
 	// Finally create workbench
 	create(document.body, {
 		...config,
-		commands: getGogs1sCustomCommands(),
-		logLevel: logLevel ? parseLogLevel(logLevel) : undefined,
+		developmentOptions: {
+			logLevel: logLevel ? parseLogLevel(logLevel) : undefined,
+			...config.developmentOptions
+		},
 		settingsSyncOptions,
 		homeIndicator,
 		windowIndicator,
@@ -543,6 +519,4 @@ class WindowIndicator implements IWindowIndicator {
 		urlCallbackProvider: new PollingURLCallbackProvider(),
 		credentialsProvider: new LocalStorageCredentialsProvider()
 	});
-
-	setTimeout(() => renderNotification(), 1000);
 })();

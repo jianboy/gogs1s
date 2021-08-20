@@ -20,7 +20,7 @@ import { localize } from 'vs/nls';
 import { Action, WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { FileAccess, Schemas } from 'vs/base/common/network';
-import { IBackupFileService } from 'vs/workbench/services/backup/common/backup';
+import { IWorkingCopyBackupService } from 'vs/workbench/services/workingCopy/common/workingCopyBackup';
 import { getInstalledExtensions, IExtensionStatus, onExtensionChanged, isKeymapExtension } from 'vs/workbench/contrib/extensions/common/extensionsUtils';
 import { IExtensionManagementService, IExtensionGalleryService, ILocalExtension } from 'vs/platform/extensionManagement/common/extensionManagement';
 import { IWorkbenchExtensionEnablementService, EnablementState } from 'vs/workbench/services/extensionManagement/common/extensionManagement';
@@ -32,7 +32,7 @@ import { registerThemingParticipant } from 'vs/platform/theme/common/themeServic
 import { focusBorder, textLinkForeground, textLinkActiveForeground, foreground, descriptionForeground, contrastBorder, activeContrastBorder } from 'vs/platform/theme/common/colorRegistry';
 import { getExtraColor } from 'vs/workbench/contrib/welcome/walkThrough/common/walkThroughUtils';
 import { IExtensionsViewPaneContainer, IExtensionsWorkbenchService, VIEWLET_ID } from 'vs/workbench/contrib/extensions/common/extensions';
-import { IEditorInputFactory, EditorInput } from 'vs/workbench/common/editor';
+import { IEditorSerializer } from 'vs/workbench/common/editor';
 import { INotificationService, Severity } from 'vs/platform/notification/common/notification';
 import { TimeoutTimer } from 'vs/base/common/async';
 import { areSameExtensions } from 'vs/platform/extensionManagement/common/extensionManagementUtil';
@@ -46,125 +46,120 @@ import { IProductService } from 'vs/platform/product/common/productService';
 import { IEditorOptions } from 'vs/platform/editor/common/editor';
 import { IWorkbenchLayoutService } from 'vs/workbench/services/layout/browser/layoutService';
 import { IViewletService } from 'vs/workbench/services/viewlet/browser/viewlet';
-import { buttonBackground, buttonHoverBackground, welcomePageBackground } from 'vs/workbench/contrib/welcome/page/browser/welcomePageColors';
-import { replaceBrowserUrl } from 'vs/gogs1s/util';
+import { GettingStartedInput, gettingStartedInputTypeId } from 'vs/workbench/contrib/welcome/gettingStarted/browser/gettingStartedInput';
+import { welcomeButtonBackground, welcomeButtonHoverBackground, welcomePageBackground } from 'vs/workbench/contrib/welcome/page/browser/welcomePageColors';
+import { EditorInput } from 'vs/workbench/common/editor/editorInput';
+import { IWorkbenchEnvironmentService } from 'vs/workbench/services/environment/common/environmentService';
+
 
 const configurationKey = 'workbench.startupEditor';
 const oldConfigurationKey = 'workbench.welcome.enabled';
 const telemetryFrom = 'welcomePage';
 
-const getCurrentFileState = (ref: string): { type: string, path: string } => {
-	const uri = URI.parse(window.location.href);
-	const [type, ...otherParts] = (uri.path || '').split('/').filter(Boolean).slice(2);
-	const refAndFilePath = otherParts.join('/');
-	if (!['tree', 'blob'].includes(type) || !refAndFilePath.startsWith(ref)) {
-		return { type: 'tree', path: '/' };
-	}
-	return { type, path: refAndFilePath.slice(ref.length) || '/' };
-};
-
 export class WelcomePageContribution implements IWorkbenchContribution {
 
 	constructor(
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IEditorService private editorService: IEditorService,
-		@IBackupFileService backupFileService: IBackupFileService,
-		@IFileService fileService: IFileService,
-		@IWorkspaceContextService contextService: IWorkspaceContextService,
-		@ILifecycleService lifecycleService: ILifecycleService,
-		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
+		@IConfigurationService private readonly configurationService: IConfigurationService,
+		@IEditorService private readonly editorService: IEditorService,
+		@IWorkingCopyBackupService private readonly workingCopyBackupService: IWorkingCopyBackupService,
+		@IFileService private readonly fileService: IFileService,
+		@IWorkspaceContextService private readonly contextService: IWorkspaceContextService,
+		@ILifecycleService private readonly lifecycleService: ILifecycleService,
+		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
 		@ICommandService private readonly commandService: ICommandService,
+		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService
 	) {
+		this.run().then(undefined, onUnexpectedError);
+	}
 
-		const enabled = isWelcomePageEnabled(configurationService, contextService);
-		if (enabled && lifecycleService.startupKind !== StartupKind.ReloadedWindow) {
-			const activeResource = editorService.activeEditor?.resource;
-			getCurrentAuthority(commandService).then((authority: string) => {
-				const fileState = getCurrentFileState(authority.split('+')[2]);
-				if (fileState.path !== '/' && (!activeResource || activeResource.scheme !== 'gogs1s' || activeResource.path !== fileState.path)) {
-					const currentFileUri = URI.from({ scheme: 'gogs1s', authority, path: fileState.path });
-					fileService.resolve(currentFileUri)
-						.then(() => this.commandService.executeCommand(fileState.type === 'tree' ? 'revealInExplorer' : 'vscode.open', currentFileUri))
-						.then(() => this.registerListeners(), () => this.registerListeners());
-					return;
+	private async run() {
+		const enabled = isWelcomePageEnabled(this.configurationService, this.contextService, this.environmentService);
+		if (enabled && this.lifecycleService.startupKind !== StartupKind.ReloadedWindow) {
+			const hasBackups = await this.workingCopyBackupService.hasBackups();
+			if (hasBackups) { return; }
+
+			// Open the welcome even if we opened a set of default editors
+			if (!this.editorService.activeEditor || this.layoutService.openedDefaultEditors) {
+				const startupEditorSetting = this.configurationService.inspect<string>(configurationKey);
+
+				// 'readme' should not be set in workspace settings to prevent tracking,
+				// but it can be set as a default (as in codespaces) or a user setting
+				const openWithReadme = startupEditorSetting.value === 'readme' &&
+					(startupEditorSetting.userValue === 'readme' || startupEditorSetting.defaultValue === 'readme');
+
+				if (openWithReadme) {
+					await this.openReadme();
+				} else {
+					await this.openWelcome();
 				}
-				backupFileService.hasBackups().then(hasBackups => {
-					// Open the welcome even if we opened a set of default editors
-					if ((!editorService.activeEditor || layoutService.openedDefaultEditors) && !hasBackups) {
-						return Promise.all(contextService.getWorkspace().folders.map(folder => {
-							const folderUri = folder.uri;
-							return fileService.resolve(folderUri)
-								.then(folder => {
-									const files = folder.children ? folder.children.map(child => child.name).sort() : [];
-									const file = files.find(file => file.toLowerCase() === 'readme.md') || files.find(file => file.toLowerCase().startsWith('readme'));
-
-									if (file) {
-										return joinPath(folderUri, file);
-									}
-									return undefined;
-								}, onUnexpectedError);
-						})).then(arrays.coalesce)
-							.then<any>(readmes => {
-								if (!editorService.activeEditor) {
-									if (readmes.length) {
-										const isMarkDown = (readme: URI) => readme.path.toLowerCase().endsWith('.md');
-										return Promise.all([
-											this.commandService.executeCommand('markdown.showPreview', null, readmes.filter(isMarkDown), { locked: true }),
-											editorService.openEditors(readmes.filter(readme => !isMarkDown(readme))
-												.map(readme => ({ resource: readme }))),
-										]);
-									} else {
-										return instantiationService.createInstance(WelcomePage).openEditor();
-									}
-								}
-								return undefined;
-							});
-					}
-					return undefined;
-				}).then(undefined, onUnexpectedError).then(() => this.registerListeners(), () => this.registerListeners());
-			});
+			}
 		}
 	}
 
-	private getGitHubFilePathOrEmpty(uri?: URI): string {
-		if (!uri || !uri.path || uri.scheme !== 'gogs1s') {
-			return '';
+	private async openReadme() {
+		const readmes = arrays.coalesce(
+			await Promise.all(this.contextService.getWorkspace().folders.map(
+				async folder => {
+					const folderUri = folder.uri;
+					const folderStat = await this.fileService.resolve(folderUri).catch(onUnexpectedError);
+					const files = folderStat?.children ? folderStat.children.map(child => child.name).sort() : [];
+					const file = files.find(file => file.toLowerCase() === 'readme.md') || files.find(file => file.toLowerCase().startsWith('readme'));
+					if (file) { return joinPath(folderUri, file); }
+					else { return undefined; }
+				})));
+
+		if (!this.editorService.activeEditor) {
+			if (readmes.length) {
+				const isMarkDown = (readme: URI) => readme.path.toLowerCase().endsWith('.md');
+				await Promise.all([
+					this.commandService.executeCommand('markdown.showPreview', null, readmes.filter(isMarkDown), { locked: true }),
+					this.editorService.openEditors(readmes.filter(readme => !isMarkDown(readme)).map(readme => ({ resource: readme }))),
+				]);
+			} else {
+				await this.openWelcome();
+			}
 		}
-		return uri.path.startsWith('/') ? uri.path : `/${uri.path}`;
 	}
 
-	private doUpdateWindowUrl(): void {
-		getCurrentAuthority(this.commandService).then(authority => {
-			const [owner, repo, ref] = authority.split('+');
-			const editor = this.editorService.activeEditor;
-			const filePath = this.getGitHubFilePathOrEmpty(editor?.resource);
-			// if no file opened and the branch is HEAD current, only retain owner and repo in url
-			const windowUrl = !filePath && ref.toUpperCase() === 'HEAD'
-				? `/${owner}/${repo}`
-				: `/${owner}/${repo}/${filePath ? 'blob' : 'tree'}/${ref}${filePath}`;
-			replaceBrowserUrl(windowUrl);
-		});
-	}
+	private async openWelcome() {
+		const startupEditorSetting = this.configurationService.getValue(configurationKey);
+		const startupEditorTypeID = (startupEditorSetting === 'welcomePage' || startupEditorSetting === 'welcomePageInEmptyWorkbench') ? gettingStartedInputTypeId : welcomeInputTypeId;
+		const editor = this.editorService.activeEditor;
 
-	private registerListeners() {
-		this.editorService.onDidActiveEditorChange(() => this.doUpdateWindowUrl());
+		// Ensure that the welcome editor won't get opened more than once
+		if (editor?.typeId === startupEditorTypeID || this.editorService.editors.some(e => e.typeId === startupEditorTypeID)) {
+			return;
+		}
+		const options: IEditorOptions = editor ? { pinned: false, index: 0 } : { pinned: false };
+		if (startupEditorTypeID === gettingStartedInputTypeId) {
+			this.editorService.openEditor(this.instantiationService.createInstance(GettingStartedInput, {}), options);
+		} else {
+			this.instantiationService.createInstance(WelcomePage).openEditor(options);
+		}
 	}
 }
 
-function isWelcomePageEnabled(configurationService: IConfigurationService, contextService: IWorkspaceContextService) {
-	const startupEditor = configurationService.inspect(configurationKey);
+function isWelcomePageEnabled(configurationService: IConfigurationService, contextService: IWorkspaceContextService, environmentService: IWorkbenchEnvironmentService) {
+	if (environmentService.skipWelcome) {
+		return false;
+	}
+
+	const startupEditor = configurationService.inspect<string>(configurationKey);
 	if (!startupEditor.userValue && !startupEditor.workspaceValue) {
 		const welcomeEnabled = configurationService.inspect(oldConfigurationKey);
 		if (welcomeEnabled.value !== undefined && welcomeEnabled.value !== null) {
 			return welcomeEnabled.value;
 		}
 	}
-	return startupEditor.value === 'welcomePage' || startupEditor.value === 'gettingStarted' || startupEditor.value === 'readme' || startupEditor.value === 'welcomePageInEmptyWorkbench' && contextService.getWorkbenchState() === WorkbenchState.EMPTY;
-}
 
-function getCurrentAuthority(commandService: ICommandService): Promise<string> {
-	return commandService.executeCommand('gogs1s.get-current-authority') as Promise<string>;
+	if (startupEditor.value === 'readme' && startupEditor.userValue !== 'readme' && startupEditor.defaultValue !== 'readme') {
+		console.error(`Warning: 'workbench.startupEditor: readme' setting ignored due to being set somewhere other than user or default settings (user=${startupEditor.userValue}, default=${startupEditor.defaultValue})`);
+	}
+	return startupEditor.value === 'welcomePage'
+		|| startupEditor.value === 'legacy_welcomePage'
+		|| startupEditor.value === 'readme' && (startupEditor.userValue === 'readme' || startupEditor.defaultValue === 'readme')
+		|| ((contextService.getWorkbenchState() === WorkbenchState.EMPTY) && (startupEditor.value === 'legacy_welcomePageInEmptyWorkbench' || startupEditor.value === 'welcomePageInEmptyWorkbench'));
 }
 
 export class WelcomePageAction extends Action {
@@ -180,7 +175,7 @@ export class WelcomePageAction extends Action {
 		super(id, label);
 	}
 
-	public run(): Promise<void> {
+	public override run(): Promise<void> {
 		return this.instantiationService.createInstance(WelcomePage)
 			.openEditor()
 			.then(() => undefined);
@@ -326,12 +321,11 @@ class WelcomePage extends Disposable {
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@IHostService private readonly hostService: IHostService,
 		@IProductService private readonly productService: IProductService,
-		@ICommandService private readonly commandService: ICommandService,
+
 	) {
 		super();
-		this._register(lifecycleService.onShutdown(() => this.dispose()));
+		this._register(lifecycleService.onDidShutdown(() => this.dispose()));
 
-		const gitHubTokenStatus = this.getGitHubTokenStatus();
 		const recentlyOpened = this.workspacesService.getRecentlyOpened();
 		const installedExtensions = this.instantiationService.invokeFunction(getInstalledExtensions);
 		const resource = FileAccess.asBrowserUri('./vs_code_welcome_page', require)
@@ -344,7 +338,7 @@ class WelcomePage extends Disposable {
 			name: localize('welcome.title', "Welcome"),
 			resource,
 			telemetryFrom,
-			onReady: (container: HTMLElement) => this.onReady(container, recentlyOpened, installedExtensions, gitHubTokenStatus)
+			onReady: (container: HTMLElement) => this.onReady(container, recentlyOpened, installedExtensions)
 		});
 	}
 
@@ -352,8 +346,8 @@ class WelcomePage extends Disposable {
 		return this.editorService.openEditor(this.editorInput, options);
 	}
 
-	private onReady(container: HTMLElement, recentlyOpened: Promise<IRecentlyOpened>, installedExtensions: Promise<IExtensionStatus[]>, gitHubTokenStatus: Promise<any>): void {
-		const enabled = isWelcomePageEnabled(this.configurationService, this.contextService);
+	private onReady(container: HTMLElement, recentlyOpened: Promise<IRecentlyOpened>, installedExtensions: Promise<IExtensionStatus[]>): void {
+		const enabled = this.configurationService.getValue(configurationKey) === 'welcomePage';
 		const showOnStartup = <HTMLInputElement>container.querySelector('#showOnStartup');
 		if (enabled) {
 			showOnStartup.setAttribute('checked', 'checked');
@@ -366,9 +360,6 @@ class WelcomePage extends Disposable {
 		if (prodName) {
 			prodName.textContent = this.productService.nameLong;
 		}
-
-		gitHubTokenStatus.then(tokenStatus => this.doUpdateGitHubTokenStatus(container, tokenStatus));
-		this.registerGogs1sListeners(container);//增加监听
 
 		recentlyOpened.then(({ workspaces }) => {
 			// Filter out the current workspace
@@ -410,81 +401,6 @@ class WelcomePage extends Disposable {
 		}));
 	}
 
-	registerGogs1sListeners(container: HTMLElement) {
-		container.querySelector('.refresh-button')?.addEventListener('click', () => this.refreshGitHubTokenStatus(container));
-		container.querySelector('.create-new-token')?.addEventListener('click', () => window?.open('https://git.yoqi.me/user/settings/applications'));
-		container.querySelector('.update-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.update-token').then(() => this.refreshGitHubTokenStatus(container)));
-		container.querySelector('.clear-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.clear-token').then(() => this.refreshGitHubTokenStatus(container)));
-	}
-
-	updateElementText(element: HTMLElement, text: string | number, type?: 'SUCCESS' | 'WARNING' | 'ERROR') {
-		if (!element) {
-			return;
-		}
-		element.innerText = `${text}`;
-		element.classList.remove('text-warning', 'text-error', 'text-success');
-		if (type === 'SUCCESS') {
-			element.classList.add('text-success');
-		} else if (type === 'WARNING') {
-			element.classList.add('text-warning');
-		} else if (type === 'ERROR') {
-			element.classList.add('text-error');
-		}
-	}
-
-	getGitHubTokenStatus() {
-		return this.commandService.executeCommand('gogs1s.validate-token', true);
-	}
-
-	refreshGitHubTokenStatus(container: HTMLElement) {
-		const statusElement = <HTMLDivElement>container.querySelector('.rate-limit-status');
-		this.updateElementText(statusElement, '');
-		this.getGitHubTokenStatus().then(tokenStatus => {
-			this.doUpdateGitHubTokenStatus(container, tokenStatus);
-		});
-	}
-
-	doUpdateGitHubTokenStatus(container: HTMLElement, tokenStatus?: any) {
-		const statusElement = <HTMLDivElement>container.querySelector('.rate-limit-status');
-		const limitElement = <HTMLDivElement>container.querySelector('.x-rate-limit-limit');
-		const remainingElement = <HTMLDivElement>container.querySelector('.x-rate-limit-remaining');
-		const resetElement = <HTMLDivElement>container.querySelector('.x-rate-limit-reset');
-		const timerElement = <HTMLDivElement>container.querySelector('.rate-limit-reset-seconds');
-
-		if (!tokenStatus) {
-			this.updateElementText(statusElement, 'Unknown', 'WARNING');
-			this.updateElementText(limitElement, 'Unknown', 'WARNING');
-			this.updateElementText(remainingElement, 'Unknown', 'WARNING');
-			this.updateElementText(resetElement, 'Unknown');
-			this.updateElementText(timerElement, 'Unknown', 'WARNING');
-			return;
-		}
-
-		const textType = (value: number) => {
-			if (value <= 0) {
-				return 'ERROR';
-			}
-			if (value > 99) {
-				return 'SUCCESS';
-			}
-			return 'WARNING';
-		};
-		this.updateElementText(limitElement, tokenStatus.limit, textType(+tokenStatus.limit));
-		this.updateElementText(remainingElement, tokenStatus.remaining, textType(+tokenStatus.remaining));
-		this.updateElementText(resetElement, tokenStatus.reset);
-		this.updateElementText(timerElement, Math.max(tokenStatus.reset - Math.ceil(Date.now() / 1000), 0));
-
-		if (!tokenStatus.token) {
-			this.updateElementText(statusElement, 'Unauthorized', 'WARNING');
-			return;
-		}
-		if (tokenStatus.valid) {
-			this.updateElementText(statusElement, 'Authorized', 'SUCCESS');
-			return;
-		}
-		this.updateElementText(statusElement, 'Invalid Token', 'ERROR');
-	}
-
 	private createListEntries(recents: (IRecentWorkspace | IRecentFolder)[]) {
 		return recents.map(recent => {
 			let fullPath: string;
@@ -511,7 +427,7 @@ class WelcomePage extends Disposable {
 					id: 'openRecentFolder',
 					from: telemetryFrom
 				});
-				this.hostService.openWindow([windowOpenable], { forceNewWindow: e.ctrlKey || e.metaKey });
+				this.hostService.openWindow([windowOpenable], { forceNewWindow: e.ctrlKey || e.metaKey, remoteAuthority: recent.remoteAuthority });
 				e.preventDefault();
 				e.stopPropagation();
 			});
@@ -731,7 +647,7 @@ class WelcomePage extends Disposable {
 	}
 }
 
-export class WelcomeInputFactory implements IEditorInputFactory {
+export class WelcomeInputSerializer implements IEditorSerializer {
 
 	static readonly ID = welcomeInputTypeId;
 
@@ -740,10 +656,10 @@ export class WelcomeInputFactory implements IEditorInputFactory {
 	}
 
 	public serialize(editorInput: EditorInput): string {
-		return '{}';
+		return '';
 	}
 
-	public deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): WalkThroughInput {
+	public deserialize(instantiationService: IInstantiationService): WalkThroughInput {
 		return instantiationService.createInstance(WelcomePage)
 			.editorInput;
 	}
@@ -764,11 +680,11 @@ registerThemingParticipant((theme, collector) => {
 	if (descriptionColor) {
 		collector.addRule(`.monaco-workbench .part.editor > .content .welcomePage .detail { color: ${descriptionColor}; }`);
 	}
-	const buttonColor = getExtraColor(theme, buttonBackground, { dark: 'rgba(0, 0, 0, .2)', extra_dark: 'rgba(200, 235, 255, .042)', light: 'rgba(0,0,0,.04)', hc: 'black' });
+	const buttonColor = getExtraColor(theme, welcomeButtonBackground, { dark: 'rgba(0, 0, 0, .2)', extra_dark: 'rgba(200, 235, 255, .042)', light: 'rgba(0,0,0,.04)', hc: 'black' });
 	if (buttonColor) {
 		collector.addRule(`.monaco-workbench .part.editor > .content .welcomePage .commands .item button { background: ${buttonColor}; }`);
 	}
-	const buttonHoverColor = getExtraColor(theme, buttonHoverBackground, { dark: 'rgba(200, 235, 255, .072)', extra_dark: 'rgba(200, 235, 255, .072)', light: 'rgba(0,0,0,.10)', hc: null });
+	const buttonHoverColor = getExtraColor(theme, welcomeButtonHoverBackground, { dark: 'rgba(200, 235, 255, .072)', extra_dark: 'rgba(200, 235, 255, .072)', light: 'rgba(0,0,0,.10)', hc: null });
 	if (buttonHoverColor) {
 		collector.addRule(`.monaco-workbench .part.editor > .content .welcomePage .commands .item button:hover { background: ${buttonHoverColor}; }`);
 	}
