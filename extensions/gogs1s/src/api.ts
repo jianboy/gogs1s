@@ -87,9 +87,9 @@ export const readGitHubDirectory = (owner: string, repo: string, ref: string, pa
  };
  // 暂时没有tags接口
  export const getGithubTags = (owner: string, repo: string) => {
-	 return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/tags`)
-		 .then(tags => {
-			 return tags;
+	 return fetch(`https://git.yoqi.me/api/v1/repos/${owner}/${repo}/releases`)
+		 .then(releases => {
+			 return releases;
 		 })
 		 .catch(handleRequestError);
  };
@@ -99,10 +99,4 @@ export const readGitHubDirectory = (owner: string, repo: string, ref: string, pa
 		 .catch(handleRequestError);
  };
  
- // export const getGitHubBranches = (owner: string, repo: string) => {
- // 	if (isGraphQLEnabled()) {
- // 		return getBranches(owner, repo);
- // 	}
- // 	return getGithubBranches(owner, repo);
- // };
  
