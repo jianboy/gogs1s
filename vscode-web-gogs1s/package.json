@@ -1,6 +1,6 @@
 {
   "name": "@jianboy/vscode-web",
-  "version": "1.1.10",
+  "version": "1.4.10",
   "description": "VS Code web for Gogs",
   "author": "jianboy",
   "license": "MIT",
@@ -27,7 +27,6 @@
     "gogs1s"
   ],
   "dependencies": {
-    
     "iconv-lite-umd": "0.6.8",
     "jschardet": "2.2.1",
     "tas-client-umd": "0.1.2",
@@ -40,6 +39,7 @@
   },
   "devDependencies": {
     "@types/trusted-types": "^2.0.0",
+    "fs-extra": "^10.0.0",
     "npm-run-all": "^4.1.5"
   }
 }
