@@ -15,7 +15,7 @@ export const updateCheckoutRefOnStatusBar = (() => {
         const ref =await getCurrentRef();
         checkoutItem.text = `$(git-branch) ${ref}`;
         checkoutItem.tooltip = `Checkout branch/tag/commit...`;
-        checkoutItem.command = `github1s.checkout-ref`;
+        checkoutItem.command = `gogs1s.checkout-ref`;
         checkoutItem.show();
     };
 })();

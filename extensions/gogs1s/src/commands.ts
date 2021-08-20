@@ -95,7 +95,7 @@ export const commandCheckoutRef = async () => {
 	}));
 
 	const quickPick = vscode.window.createQuickPick();
-	const [owner, repo, ref] = await getCurrentAuthority().split('+');
+	const ref = await getCurrentRef();
 	quickPick.placeholder = ref;
 	quickPick.items = [...branchPickerItems, ...tagPickerItems];
 
@@ -105,8 +105,8 @@ export const commandCheckoutRef = async () => {
 	);
 	quickPick.hide();
 	
-	var newRef = choice?.label || quickPick.value;
+	let newRef = choice?.label || quickPick.value;
 	return newRef && changeCurrentRef(newRef).then((newRef) => {
 		vscode.window.showInformationMessage(`Checkout to: ${newRef}`);
 	});
-}
+};
