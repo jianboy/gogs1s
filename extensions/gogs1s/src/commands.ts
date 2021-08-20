@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { getExtensionContext, getRepositoryBranches, getRepositoryTags, getCurrentRef, getCurrentAuthority, changeCurrentRef } from './util';
 import { validateToken } from './api';
+import { updateCheckoutRefOnStatusBar } from './source-control/status-bar';
 
 export const commandValidateToken = (silent: boolean = false) => {
 	const context = getExtensionContext();
@@ -108,5 +109,6 @@ export const commandCheckoutRef = async () => {
 	let newRef = choice?.label || quickPick.value;
 	return newRef && changeCurrentRef(newRef).then((newRef) => {
 		vscode.window.showInformationMessage(`Checkout to: ${newRef}`);
+		updateCheckoutRefOnStatusBar();
 	});
 };
