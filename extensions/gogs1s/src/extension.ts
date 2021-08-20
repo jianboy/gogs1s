@@ -7,7 +7,8 @@ import * as vscode from 'vscode';
 import { Gogs1sFS } from './gogs1sfs';
 import { SettingsView } from './settings-view';
 import { setExtensionContext } from './util';
-import { commandUpdateToken, commandValidateToken, commandClearToken, commandSwitchBranch, commandSwitchTag, commandGetCurrentAuthority } from './commands';
+import { commandUpdateToken, commandValidateToken, commandClearToken, commandSwitchBranch, commandSwitchTag, commandCheckoutRef, commandGetCurrentAuthority } from './commands';
+import { activateSourceControl } from './source-control';
 
 export function activate(context: vscode.ExtensionContext) {
 	setExtensionContext(context);
@@ -21,4 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.get-current-authority', commandGetCurrentAuthority));
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.switch-branch', commandSwitchBranch));
 	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.switch-tag', commandSwitchTag));
+	context.subscriptions.push(vscode.commands.registerCommand('gogs1s.checkout-ref', commandCheckoutRef));
+	// activate SourceControl features,
+	activateSourceControl();
 }

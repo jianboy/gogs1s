@@ -16,6 +16,7 @@
     "onCommand:gogs1s.get-current-authority",
     "onCommand:gogs1s.switch-branch",
     "onCommand:gogs1s.switch-tag",
+    "onCommand:gogs1s.checkout-ref",
     "onView:gogs1s"
   ],
   "browser": "./dist/extension",
@@ -65,6 +66,11 @@
       {
         "command": "gogs1s.switch-tag",
         "title": "Switch to Another Tag",
+        "category": "gogs1s"
+      },
+      {
+        "command": "gogs1s.checkout-ref",
+        "title": "Checkout to...",
         "category": "gogs1s"
       }
     ],
