@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { getExtensionContext, getRepositoryBranches, getRepositoryTags, getCurrentRef, getCurrentAuthority, changeCurrentRef } from './util';
 import { validateToken } from './api';
+import { updateCheckoutRefOnStatusBar } from './source-control/status-bar';
 
 export const commandValidateToken = (silent: boolean = false) => {
 	const context = getExtensionContext();
@@ -76,4 +77,38 @@ export const commandSwitchTag = () => {
 			});
 		})
 	));
+};
+// 切换 ref 命令，代替切换 branch 和 tags
+export const commandCheckoutRef = async () => {
+	const [branchRefs, tagRefs] = await Promise.all([
+		getRepositoryBranches(),
+		getRepositoryTags(),
+	]);
+	const branchPickerItems: vscode.QuickPickItem[] = branchRefs.map(
+		(branchRef) => ({
+			label: branchRef.name,
+			description: (branchRef.commit?.id || '').slice(0, 8),
+		})
+	);
+	const tagPickerItems: vscode.QuickPickItem[] = tagRefs.map((tagRef) => ({
+		label: tagRef.tag_name,
+		description: `Tag at ${(tagRef.body)}`,
+	}));
+
+	const quickPick = vscode.window.createQuickPick();
+	const ref = await getCurrentRef();
+	quickPick.placeholder = ref;
+	quickPick.items = [...branchPickerItems, ...tagPickerItems];
+
+	quickPick.show();
+	const choice = await new Promise<vscode.QuickPickItem | undefined>(
+		(resolve) => quickPick.onDidAccept(() => resolve(quickPick.activeItems[0]))
+	);
+	quickPick.hide();
+	
+	let newRef = choice?.label || quickPick.value;
+	return newRef && changeCurrentRef(newRef).then((newRef) => {
+		vscode.window.showInformationMessage(`Checkout to: ${newRef}`);
+		updateCheckoutRefOnStatusBar();
+	});
 };

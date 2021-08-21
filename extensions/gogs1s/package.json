@@ -16,6 +16,7 @@
     "onCommand:gogs1s.get-current-authority",
     "onCommand:gogs1s.switch-branch",
     "onCommand:gogs1s.switch-tag",
+    "onCommand:gogs1s.checkout-ref",
     "onView:gogs1s"
   ],
   "browser": "./dist/extension",
@@ -66,6 +67,74 @@
         "command": "gogs1s.switch-tag",
         "title": "Switch to Another Tag",
         "category": "gogs1s"
+      },
+      {
+        "command": "gogs1s.checkout-ref",
+        "title": "Checkout to...",
+        "category": "gogs1s"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Gogs1s Configuration",
+        "type": "Object",
+        "properties": {
+          "update.mode": {
+            "type": "string",
+            "default": "none",
+            "description": "是否检测更新"
+          },
+          "update.showReleaseNotes": {
+            "type": "boolean",
+            "default": false,
+            "description": "是否显示更新信息"
+          },
+          "editor.fontSize": {
+            "type": "int",
+            "default": 13,
+            "description": "字体大小"
+          },
+          "editor.fontFamily": {
+            "type": "string",
+            "default": "Monaco, 'Courier New', monospace",
+            "description": "是否显示更新信息"
+          },
+          "workbench.editor.enablePreview": {
+            "type": "boolean",
+            "default": false,
+            "description": "是否显示更新信息"
+          },
+          "workbench.tree.indent": {
+            "type": "int",
+            "default": 15,
+            "description": "目录树间隔大小"
+          },
+          "window.restoreFullscreen": {
+            "type": "boolean",
+            "default": true,
+            "description": "是否恢复全屏"
+          },
+          "window.menuBarVisibility": {
+            "type": "boolean",
+            "default": "compact",
+            "description": "兼容模式"
+          },
+          "zenMode.centerLayout": {
+            "type": "boolean",
+            "default": false,
+            "description": "zenMode是否居中对齐"
+          },
+          "zenMode.hideLineNumbers": {
+            "type": "boolean",
+            "default": true,
+            "description": "是否显示行号"
+          },
+          "zenMode.restore": {
+            "type": "boolean",
+            "default": true,
+            "description": "zenMode恢复全屏"
+          }
+        }
       }
     ]
   },
@@ -77,7 +146,8 @@
   },
   "keywords": [
     "gogs",
-    "gogs1s"],
+    "gogs1s"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

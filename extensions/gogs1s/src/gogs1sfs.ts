@@ -3,7 +3,7 @@
  * @author netcon
  */
 
-import {
+ import {
 	workspace,
 	Disposable,
 	FileSystemProvider,
@@ -77,11 +77,10 @@ export class Directory implements FileStat {
 
 interface GithubRESTEntry {
 	path: string;
-	type: 'tree' | 'blob';
+	type: 'tree' | 'blob'  |'dir' | 'file';
 	sha: string;
 	size?: number;
 }
-
 interface GithubGraphQLEntry {
 	name: string;
 	oid: string;
@@ -93,18 +92,19 @@ interface GithubGraphQLEntry {
 export type Entry = File | Directory;
 
 const insertGitHubRESTEntryToDirectory = (githubEntry: GithubRESTEntry, baseDirectory: Directory) => {
-	const pathParts = githubEntry.path.split('/').filter(Boolean);
-	const fileName = pathParts.pop();
+	const pathParts = githubEntry.path.split('/').filter(Boolean);// /tools/get_ip_utils.py
+	const fileName = pathParts.pop(); // get_ip_utils.py
 	let current = baseDirectory;
-	pathParts.forEach(part => {
-		if (!(current.entries || (current.entries = new Map<string, Entry>())).get(part)) {
-			current.entries.set(part, new Directory(Uri.joinPath(current.uri, current.name), part));
-		}
-		current = current.entries.get(part) as Directory;
-	});
+	// pathParts.forEach(part => {
+	// 	if (!(current.entries || (current.entries = new Map<string, Entry>())).get(part)) {
+	// 		current.entries.set(part, new Directory(Uri.joinPath(current.uri, current.name), part));
+	// 	}
+	// 	console.error("------------3");
+	// 	current = current.entries.get(part) as Directory;
+	// });
 	if (!(current.entries || (current.entries = new Map<string, Entry>())).get(fileName)) {
 		const entryUri = Uri.joinPath(current.uri, current.name);
-		current.entries.set(fileName, (githubEntry.type === 'tree') ? new Directory(entryUri, fileName) : new File(entryUri, fileName));
+		current.entries.set(fileName, (githubEntry.type === 'tree' || githubEntry.type === 'dir') ? new Directory(entryUri, fileName) : new File(entryUri, fileName));
 	}
 	const entry: Entry = current.entries.get(fileName);
 	entry.sha = githubEntry.sha;
@@ -147,11 +147,12 @@ export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposa
 	private _emitter = new EventEmitter<FileChangeEvent[]>();
 	private root: Map<string, Directory | File> = new Map();
 	private fuseMap: Map<string, Fuse<GithubRESTEntry>> = new Map();
-
+	// resource 创建和更改监听事件
 	onDidChangeFile: Event<FileChangeEvent[]> = this._emitter.event;
 
 	constructor() {
 		this.disposable = Disposable.from(
+			// 注册gogs1s文件协议，需要实现 FileSystemProvider 文件（夹）读写方法
 			workspace.registerFileSystemProvider(Gogs1sFS.scheme, this, { isCaseSensitive: true, isReadonly: true }),
 			workspace.registerFileSearchProvider(Gogs1sFS.scheme, this),
 		);
@@ -210,48 +211,29 @@ export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposa
 			throw FileSystemError.FileIsADirectory(uri);
 		}
 	}
-
+	// 根据uri，监听文件、文件夹 FileSystemProvider
 	watch(uri: Uri, options: { recursive: boolean; excludes: string[]; }): Disposable {
 		return new Disposable(noop);
 	}
-
+	//返回文件的元数据 FileSystemProvider
 	stat(uri: Uri): FileStat | Thenable<FileStat> {
 		return this._lookup(uri, false);
 	}
-
+	// 读目录 FileSystemProvider
 	readDirectory = reuseable((uri: Uri): [string, FileType][] | Thenable<[string, FileType][]> => {
 		return this._lookupAsDirectory(uri, false).then(async parent => {
 			if (parent.entries !== null) {
 				return parent.getNameTypePairs();
 			}
-
 			const [owner, repo, ref] = (uri.authority || await getCurrentAuthority()).split('+');
-			if (isGraphQLEnabled()) {
-					return apolloClient.query({
-						query: githubObjectQuery, variables: {
-							owner,
-							repo,
-							expression: `${ref}:${uri.path.slice(1)}`
-						}
-					})
-						.then((response) => {
-							const entries = response.data?.repository?.object?.entries;
-							if (!entries) {
-								throw FileSystemError.FileNotADirectory(uri);
-							}
-							insertGitHubGraphQLEntriesToDirectory(entries, parent);
-							return parent.getNameTypePairs();
-						});
-			}
-
 			return readGitHubDirectory(owner, repo, ref, uri.path).then(data => {
 				// create new Entry to `parent.entries` only if `parent.entries.get(item.path)` is nil
-				(data.tree || []).forEach((item: GithubRESTEntry) => insertGitHubRESTEntryToDirectory(item, parent));
+				(data || []).forEach((item: GithubRESTEntry) => insertGitHubRESTEntryToDirectory(item, parent));
 				return parent.getNameTypePairs();
 			});
 		});
 	}, (uri: Uri) => uri.toString());
-
+	// 读文件 FileSystemProvider
 	readFile = reuseable((uri: Uri): Uint8Array | Thenable<Uint8Array> => {
 		return this._lookupAsFile(uri, false).then(async file => {
 			if (file.data !== null) {
@@ -270,23 +252,23 @@ export class Gogs1sFS implements FileSystemProvider, FileSearchProvider, Disposa
 			});
 		});
 	}, (uri: Uri) => uri.toString());
-
+	//创建目录 FileSystemProvider
 	createDirectory(uri: Uri): void | Thenable<void> {
 		return Promise.resolve();
 	}
-
+	// 写文件 FileSystemProvider
 	writeFile(uri: Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
 		return Promise.resolve();
 	}
-
+	//删除 FileSystemProvider
 	delete(uri: Uri, options: { recursive: boolean; }): void | Thenable<void> {
 		return Promise.resolve();
 	}
-
+	// 文件重命名 FileSystemProvider
 	rename(oldUri: Uri, newUri: Uri, options: { overwrite: boolean; }): void | Thenable<void> {
 		return Promise.resolve();
 	}
-
+	// 复制 FileSystemProvider
 	copy?(source: Uri, destination: Uri, options: { overwrite: boolean; }): void | Thenable<void> {
 		return Promise.resolve();
 	}
