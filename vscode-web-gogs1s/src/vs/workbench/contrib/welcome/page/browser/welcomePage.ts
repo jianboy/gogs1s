@@ -50,18 +50,28 @@ import { GettingStartedInput, gettingStartedInputTypeId } from 'vs/workbench/con
 import { welcomeButtonBackground, welcomeButtonHoverBackground, welcomePageBackground } from 'vs/workbench/contrib/welcome/page/browser/welcomePageColors';
 import { EditorInput } from 'vs/workbench/common/editor/editorInput';
 import { IWorkbenchEnvironmentService } from 'vs/workbench/services/environment/common/environmentService';
-
+import { replaceBrowserUrl } from 'vs/gogs1s/util';
 
 const configurationKey = 'workbench.startupEditor';
 const oldConfigurationKey = 'workbench.welcome.enabled';
 const telemetryFrom = 'welcomePage';
+
+const getCurrentFileState = (ref: string): { type: string, path: string } => {
+	const uri = URI.parse(window.location.href);
+	const [type, ...otherParts] = (uri.path || '').split('/').filter(Boolean).slice(2);
+	const refAndFilePath = otherParts.join('/');
+	if (!['tree', 'blob'].includes(type) || !refAndFilePath.startsWith(ref)) {
+		return { type: 'tree', path: '/' };
+	}
+	return { type, path: refAndFilePath.slice(ref.length) || '/' };
+};
 
 export class WelcomePageContribution implements IWorkbenchContribution {
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IEditorService private readonly editorService: IEditorService,
+		@IEditorService private editorService: IEditorService,
 		@IWorkingCopyBackupService private readonly workingCopyBackupService: IWorkingCopyBackupService,
 		@IFileService private readonly fileService: IFileService,
 		@IWorkspaceContextService private readonly contextService: IWorkspaceContextService,
@@ -70,30 +80,41 @@ export class WelcomePageContribution implements IWorkbenchContribution {
 		@ICommandService private readonly commandService: ICommandService,
 		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService
 	) {
-		this.run().then(undefined, onUnexpectedError);
+		this.run();
 	}
 
-	private async run() {
+	private run() {
 		const enabled = isWelcomePageEnabled(this.configurationService, this.contextService, this.environmentService);
 		if (enabled && this.lifecycleService.startupKind !== StartupKind.ReloadedWindow) {
-			const hasBackups = await this.workingCopyBackupService.hasBackups();
-			if (hasBackups) { return; }
-
-			// Open the welcome even if we opened a set of default editors
-			if (!this.editorService.activeEditor || this.layoutService.openedDefaultEditors) {
-				const startupEditorSetting = this.configurationService.inspect<string>(configurationKey);
-
-				// 'readme' should not be set in workspace settings to prevent tracking,
-				// but it can be set as a default (as in codespaces) or a user setting
-				const openWithReadme = startupEditorSetting.value === 'readme' &&
-					(startupEditorSetting.userValue === 'readme' || startupEditorSetting.defaultValue === 'readme');
-
-				if (openWithReadme) {
-					await this.openReadme();
-				} else {
-					await this.openWelcome();
+			const activeResource = this.editorService.activeEditor?.resource;
+			getCurrentAuthority(this.commandService).then(async (authority: string) => {
+				const fileState = getCurrentFileState(authority.split('+')[2]);
+				if (fileState.path !== '/' && (!activeResource || activeResource.scheme !== 'gogs1s' || activeResource.path !== fileState.path)) {
+					const currentFileUri = URI.from({ scheme: 'gogs1s', authority, path: fileState.path });
+					this.fileService.resolve(currentFileUri)
+						.then(() => this.commandService.executeCommand(fileState.type === 'tree' ? 'revealInExplorer' : 'vscode.open', currentFileUri))
+						.then(() => this.registerListeners(), () => this.registerListeners());
+					return;
 				}
-			}
+				const hasBackups = await this.workingCopyBackupService.hasBackups();
+				if (hasBackups) { return; }
+
+				// Open the welcome even if we opened a set of default editors
+				if (!this.editorService.activeEditor || this.layoutService.openedDefaultEditors) {
+					const startupEditorSetting = this.configurationService.inspect<string>(configurationKey);
+
+					// 'readme' should not be set in workspace settings to prevent tracking,
+					// but it can be set as a default (as in codespaces) or a user setting
+					const openWithReadme = startupEditorSetting.value === 'readme' &&
+						(startupEditorSetting.userValue === 'readme' || startupEditorSetting.defaultValue === 'readme');
+
+					if (openWithReadme) {
+						await this.openReadme();
+					} else {
+						await this.openWelcome();
+					}
+				}
+			}).then(undefined, onUnexpectedError);
 		}
 	}
 
@@ -138,6 +159,29 @@ export class WelcomePageContribution implements IWorkbenchContribution {
 			this.instantiationService.createInstance(WelcomePage).openEditor(options);
 		}
 	}
+	private getGitHubFilePathOrEmpty(uri?: URI): string {
+		if (!uri || !uri.path || uri.scheme !== 'gogs1s') {
+			return '';
+		}
+		return uri.path.startsWith('/') ? uri.path : `/${uri.path}`;
+	}
+
+	private doUpdateWindowUrl(): void {
+		getCurrentAuthority(this.commandService).then(authority => {
+			const [owner, repo, ref] = authority.split('+');
+			const editor = this.editorService.activeEditor;
+			const filePath = this.getGitHubFilePathOrEmpty(editor?.resource);
+			// if no file opened and the branch is HEAD current, only retain owner and repo in url
+			const windowUrl = !filePath && ref.toUpperCase() === 'HEAD'
+				? `/${owner}/${repo}`
+				: `/${owner}/${repo}/${filePath ? 'blob' : 'tree'}/${ref}${filePath}`;
+			replaceBrowserUrl(windowUrl);
+		});
+	}
+
+	private registerListeners() {
+		this.editorService.onDidActiveEditorChange(() => this.doUpdateWindowUrl());
+	}
 }
 
 function isWelcomePageEnabled(configurationService: IConfigurationService, contextService: IWorkspaceContextService, environmentService: IWorkbenchEnvironmentService) {
@@ -160,6 +204,10 @@ function isWelcomePageEnabled(configurationService: IConfigurationService, conte
 		|| startupEditor.value === 'legacy_welcomePage'
 		|| startupEditor.value === 'readme' && (startupEditor.userValue === 'readme' || startupEditor.defaultValue === 'readme')
 		|| ((contextService.getWorkbenchState() === WorkbenchState.EMPTY) && (startupEditor.value === 'legacy_welcomePageInEmptyWorkbench' || startupEditor.value === 'welcomePageInEmptyWorkbench'));
+}
+
+function getCurrentAuthority(commandService: ICommandService): Promise<string> {
+	return commandService.executeCommand('gogs1s.get-current-authority') as Promise<string>;
 }
 
 export class WelcomePageAction extends Action {
@@ -321,11 +369,12 @@ class WelcomePage extends Disposable {
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@IHostService private readonly hostService: IHostService,
 		@IProductService private readonly productService: IProductService,
-
+		@ICommandService private readonly commandService: ICommandService,
 	) {
 		super();
 		this._register(lifecycleService.onDidShutdown(() => this.dispose()));
 
+		const gitHubTokenStatus = this.getGitHubTokenStatus();
 		const recentlyOpened = this.workspacesService.getRecentlyOpened();
 		const installedExtensions = this.instantiationService.invokeFunction(getInstalledExtensions);
 		const resource = FileAccess.asBrowserUri('./vs_code_welcome_page', require)
@@ -338,7 +387,7 @@ class WelcomePage extends Disposable {
 			name: localize('welcome.title', "Welcome"),
 			resource,
 			telemetryFrom,
-			onReady: (container: HTMLElement) => this.onReady(container, recentlyOpened, installedExtensions)
+			onReady: (container: HTMLElement) => this.onReady(container, recentlyOpened, installedExtensions, gitHubTokenStatus)
 		});
 	}
 
@@ -346,7 +395,7 @@ class WelcomePage extends Disposable {
 		return this.editorService.openEditor(this.editorInput, options);
 	}
 
-	private onReady(container: HTMLElement, recentlyOpened: Promise<IRecentlyOpened>, installedExtensions: Promise<IExtensionStatus[]>): void {
+	private onReady(container: HTMLElement, recentlyOpened: Promise<IRecentlyOpened>, installedExtensions: Promise<IExtensionStatus[]>, gitHubTokenStatus: Promise<any>): void {
 		const enabled = this.configurationService.getValue(configurationKey) === 'welcomePage';
 		const showOnStartup = <HTMLInputElement>container.querySelector('#showOnStartup');
 		if (enabled) {
@@ -360,6 +409,8 @@ class WelcomePage extends Disposable {
 		if (prodName) {
 			prodName.textContent = this.productService.nameLong;
 		}
+		gitHubTokenStatus.then(tokenStatus => this.doUpdateGitHubTokenStatus(container, tokenStatus));
+		this.registerGogs1sListeners(container);//增加监听
 
 		recentlyOpened.then(({ workspaces }) => {
 			// Filter out the current workspace
@@ -399,6 +450,81 @@ class WelcomePage extends Disposable {
 				}
 			}
 		}));
+	}
+
+	registerGogs1sListeners(container: HTMLElement) {
+		container.querySelector('.refresh-button')?.addEventListener('click', () => this.refreshGitHubTokenStatus(container));
+		container.querySelector('.create-new-token')?.addEventListener('click', () => window?.open('https://git.yoqi.me/user/settings/applications'));
+		container.querySelector('.update-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.update-token').then(() => this.refreshGitHubTokenStatus(container)));
+		container.querySelector('.clear-oauth-token')?.addEventListener('click', () => this.commandService.executeCommand('gogs1s.clear-token').then(() => this.refreshGitHubTokenStatus(container)));
+	}
+
+	updateElementText(element: HTMLElement, text: string | number, type?: 'SUCCESS' | 'WARNING' | 'ERROR') {
+		if (!element) {
+			return;
+		}
+		element.innerText = `${text}`;
+		element.classList.remove('text-warning', 'text-error', 'text-success');
+		if (type === 'SUCCESS') {
+			element.classList.add('text-success');
+		} else if (type === 'WARNING') {
+			element.classList.add('text-warning');
+		} else if (type === 'ERROR') {
+			element.classList.add('text-error');
+		}
+	}
+
+	getGitHubTokenStatus() {
+		return this.commandService.executeCommand('gogs1s.validate-token', true);
+	}
+
+	refreshGitHubTokenStatus(container: HTMLElement) {
+		const statusElement = <HTMLDivElement>container.querySelector('.rate-limit-status');
+		this.updateElementText(statusElement, '');
+		this.getGitHubTokenStatus().then(tokenStatus => {
+			this.doUpdateGitHubTokenStatus(container, tokenStatus);
+		});
+	}
+
+	doUpdateGitHubTokenStatus(container: HTMLElement, tokenStatus?: any) {
+		const statusElement = <HTMLDivElement>container.querySelector('.rate-limit-status');
+		const limitElement = <HTMLDivElement>container.querySelector('.x-rate-limit-limit');
+		const remainingElement = <HTMLDivElement>container.querySelector('.x-rate-limit-remaining');
+		const resetElement = <HTMLDivElement>container.querySelector('.x-rate-limit-reset');
+		const timerElement = <HTMLDivElement>container.querySelector('.rate-limit-reset-seconds');
+
+		if (!tokenStatus) {
+			this.updateElementText(statusElement, 'Unknown', 'WARNING');
+			this.updateElementText(limitElement, 'Unknown', 'WARNING');
+			this.updateElementText(remainingElement, 'Unknown', 'WARNING');
+			this.updateElementText(resetElement, 'Unknown');
+			this.updateElementText(timerElement, 'Unknown', 'WARNING');
+			return;
+		}
+
+		const textType = (value: number) => {
+			if (value <= 0) {
+				return 'ERROR';
+			}
+			if (value > 99) {
+				return 'SUCCESS';
+			}
+			return 'WARNING';
+		};
+		this.updateElementText(limitElement, tokenStatus.limit, textType(+tokenStatus.limit));
+		this.updateElementText(remainingElement, tokenStatus.remaining, textType(+tokenStatus.remaining));
+		this.updateElementText(resetElement, tokenStatus.reset);
+		this.updateElementText(timerElement, Math.max(tokenStatus.reset - Math.ceil(Date.now() / 1000), 0));
+
+		if (!tokenStatus.token) {
+			this.updateElementText(statusElement, 'Unauthorized', 'WARNING');
+			return;
+		}
+		if (tokenStatus.valid) {
+			this.updateElementText(statusElement, 'Authorized', 'SUCCESS');
+			return;
+		}
+		this.updateElementText(statusElement, 'Invalid Token', 'ERROR');
 	}
 
 	private createListEntries(recents: (IRecentWorkspace | IRecentFolder)[]) {

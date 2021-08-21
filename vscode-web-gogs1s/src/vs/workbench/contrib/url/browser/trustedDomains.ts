@@ -15,7 +15,7 @@ import { IAuthenticationService } from 'vs/workbench/services/authentication/bro
 import { IFileService } from 'vs/platform/files/common/files';
 import { ITextFileService } from 'vs/workbench/services/textfile/common/textfiles';
 import { IWorkspaceContextService } from 'vs/platform/workspace/common/workspace';
-import { IWorkbenchEnvironmentService } from 'vs/workbench/services/environment/common/environmentService';
+// import { IWorkbenchEnvironmentService } from 'vs/workbench/services/environment/common/environmentService';
 
 const TRUSTED_DOMAINS_URI = URI.parse('trustedDomains:/Trusted Domains');
 
@@ -221,12 +221,11 @@ const gogs1sDefaultTrustedDomains = [
 export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTrustedDomains {
 	const storageService = accessor.get(IStorageService);
 	const productService = accessor.get(IProductService);
-	const environmentService = accessor.get(IWorkbenchEnvironmentService);
+	// const environmentService = accessor.get(IWorkbenchEnvironmentService);
 
-	const defaultTrustedDomains = [
-		...productService.linkProtectionTrustedDomains ?? [],
-		...environmentService.options?.additionalTrustedDomains ?? []
-	];
+	const defaultTrustedDomains: string[] = productService.linkProtectionTrustedDomains
+		? [...productService.linkProtectionTrustedDomains, ...gogs1sDefaultTrustedDomains]
+		: [...gogs1sDefaultTrustedDomains];
 
 	let trustedDomains: string[] = [];
 	try {
