@@ -250,7 +250,12 @@ export class ExplorerView extends ViewPane {
 		const setHeader = () => {
 			const workspace = this.contextService.getWorkspace();
 			const title = workspace.folders.map(folder => folder.name).join();
-			titleElement.textContent = this.name;
+			// modify by github1s, set file explorer title with `${route.owner}/${route.repo}`
+			const currentFolderUri = workspace.folders?.[0].uri;
+			const textContent = (currentFolderUri && currentFolderUri.scheme === 'gogs1s')
+				? URI.parse(window.location.href).path.split('/').filter(Boolean).slice(0, 2).join('/') || 'lyq/github-host'
+				: this.name;
+			titleElement.textContent = textContent;
 			titleElement.title = title;
 			titleElement.setAttribute('aria-label', nls.localize('explorerSection', "Explorer Section: {0}", this.name));
 		};

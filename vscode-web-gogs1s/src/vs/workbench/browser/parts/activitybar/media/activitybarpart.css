@@ -52,6 +52,15 @@
 	background-color: inherit;
 }
 
+/** modify-by-github1s, add homeIndicator click style */
+.monaco-workbench .activitybar > .content > .home-bar:hover {
+	opacity: 0.7;
+}
+
+.monaco-workbench .activitybar > .content > .home-bar:active {
+	opacity: 0.4;
+}
+
 .monaco-workbench .activitybar .action-item:focus {
 	outline: 0 !important; /* activity bar indicates focus custom */
 }

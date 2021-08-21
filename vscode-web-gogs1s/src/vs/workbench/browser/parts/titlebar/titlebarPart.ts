@@ -308,6 +308,7 @@ export class TitlebarPart extends Part implements ITitleService {
 		const appName = this.productService.nameLong;
 		const separator = this.configurationService.getValue<string>('window.titleSeparator');
 		const titleTemplate = this.configurationService.getValue<string>('window.title');
+		const [owner = 'lyq', repo = 'github-host'] = URI.parse(window.location.href).path.split('/').filter(Boolean);
 
 		return template(titleTemplate, {
 			activeEditorShort,
@@ -323,7 +324,9 @@ export class TitlebarPart extends Part implements ITitleService {
 			dirty,
 			appName,
 			remoteName,
-			separator: { label: separator }
+			separator: { label: separator },
+			owner,
+			repo
 		});
 	}
 

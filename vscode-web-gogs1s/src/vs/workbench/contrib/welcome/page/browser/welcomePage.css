@@ -248,6 +248,36 @@
 .monaco-workbench.mac .part.editor > .content .welcomePage li.mac-only {
 	display: list-item;
 }
+
+.monaco-workbench .part.editor > .content .welcomePage .text-warning {
+	color: #cca700;
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .text-error {
+	color: #f48771;
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .text-success {
+	color: #89d185
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .refresh-button {
+	vertical-align: bottom;
+	cursor: pointer;
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .refresh-button:hover {
+	color: #3794ff;
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .refresh-button:hover {
+	color: #3794ff;
+}
+
+.monaco-workbench .part.editor > .content .welcomePage .refresh-button:active {
+	color: #094771;
+}
+
 .monaco-workbench.windows .part.editor > .content .welcomePage li.windows-only {
 	display: list-item;
 }

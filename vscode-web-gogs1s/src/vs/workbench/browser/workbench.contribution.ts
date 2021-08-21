@@ -381,10 +381,11 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 						return '${activeEditorShort}${separator}${rootName}'; // macOS has native dirty indicator
 					}
 
-					const base = '${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}';
-					if (isWeb) {
-						return base + '${separator}${remoteName}'; // Web: always show remote name
-					}
+					// modify-by-github1s, change page title
+					const base = '${dirty}${activeEditorShort}${separator}${owner}/${repo}${separator}${appName}';
+					// if (isWeb) {
+					// 	return base + '${separator}${remoteName}'; // Web: always show remote name
+					// }
 
 					return base;
 				})(),

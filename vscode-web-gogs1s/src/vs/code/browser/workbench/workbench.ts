@@ -18,7 +18,14 @@ import { localize } from 'vs/nls';
 import { Schemas } from 'vs/base/common/network';
 import product from 'vs/platform/product/common/product';
 import { parseLogLevel } from 'vs/platform/log/common/log';
+import { getBrowserUrl, replaceBrowserUrl } from 'vs/gogs1s/util';
+import { renderNotification } from 'vs/gogs1s/notification';
 
+// custom vs code commands defined by gogs1s
+const getGogs1sCustomCommands: () => ({ id: string, handler: (...args: any[]) => unknown }[]) = () => [
+	{ id: 'gogs1s.vscode.get-browser-url', handler: getBrowserUrl },
+	{ id: 'gogs1s.vscode.replace-browser-url', handler: replaceBrowserUrl },
+];
 function doCreateUri(path: string, queryValues: Map<string, string>): URI {
 	let query: string | undefined = undefined;
 
@@ -383,21 +390,21 @@ class WindowIndicator implements IWindowIndicator {
 				uri = workspace.workspaceUri;
 			}
 
-			if (uri?.scheme === 'github' || uri?.scheme === 'codespace') {
-				[repositoryOwner, repositoryName] = uri.authority.split('+');
+			if (uri?.scheme === 'gogs1s') {
+				[repositoryOwner = 'lyq', repositoryName = 'github-host'] = URI.parse(getBrowserUrl()).path.split('/').filter(Boolean);
 			}
 		}
 
 		// Repo
 		if (repositoryName && repositoryOwner) {
-			this.label = localize('playgroundLabelRepository', "$(remote) VS Code Web Playground: {0}/{1}", repositoryOwner, repositoryName);
-			this.tooltip = localize('playgroundRepositoryTooltip', "VS Code Web Playground: {0}/{1}", repositoryOwner, repositoryName);
+			this.label = localize('playgroundLabelRepository', "$(remote) Gogs1s: {0}/{1}", repositoryOwner, repositoryName);
+			this.tooltip = localize('playgroundRepositoryTooltip', "Gogs1s: {0}/{1}", repositoryOwner, repositoryName);
 		}
 
 		// No Repo
 		else {
-			this.label = localize('playgroundLabel', "$(remote) VS Code Web Playground");
-			this.tooltip = localize('playgroundTooltip', "VS Code Web Playground");
+			this.label = localize('playgroundLabel', "$(remote) Gogs1s");
+			this.tooltip = localize('playgroundTooltip', "Gogs1s");
 		}
 	}
 }
@@ -472,9 +479,10 @@ class WindowIndicator implements IWindowIndicator {
 	const workspaceProvider = new WorkspaceProvider(workspace, payload);
 
 	// Home Indicator
+	const [repoOwner = 'lyq', repoName = 'github-host'] = (URI.parse(window.location.href).path || '').split('/').filter(Boolean);
 	const homeIndicator: IHomeIndicator = {
-		href: 'https://github.com/microsoft/vscode',
-		icon: 'code',
+		href: `https://git.yoqi.me/${repoOwner}/${repoName}`,
+		icon: 'github',
 		title: localize('home', "Home")
 	};
 
@@ -504,9 +512,13 @@ class WindowIndicator implements IWindowIndicator {
 		enabled: config.settingsSyncOptions.enabled,
 	} : undefined;
 
+	// Remove the html load spinner
+	document.querySelector('#load-spinner')?.remove();
+
 	// Finally create workbench
 	create(document.body, {
 		...config,
+		commands: getGogs1sCustomCommands(),
 		developmentOptions: {
 			logLevel: logLevel ? parseLogLevel(logLevel) : undefined,
 			...config.developmentOptions
@@ -519,4 +531,5 @@ class WindowIndicator implements IWindowIndicator {
 		urlCallbackProvider: new PollingURLCallbackProvider(),
 		credentialsProvider: new LocalStorageCredentialsProvider()
 	});
+	setTimeout(() => renderNotification(), 1000);
 })();

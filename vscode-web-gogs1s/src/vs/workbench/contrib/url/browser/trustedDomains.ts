@@ -210,6 +210,14 @@ export async function readAuthenticationTrustedDomains(accessor: ServicesAccesso
 		: [];
 }
 
+// modify by vscode
+const gogs1sDefaultTrustedDomains = [
+	'*.github.com',
+	'*.microsoft.com',
+	'*.git.yoqi.me',
+	'project.yoqi.me',
+];
+
 export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTrustedDomains {
 	const storageService = accessor.get(IStorageService);
 	const productService = accessor.get(IProductService);
