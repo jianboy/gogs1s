@@ -59,7 +59,7 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.0.tgz#87de7af9c231826fdd68ac7258f77c429e0e5fcf"
   integrity sha512-wdppn25U8z/2yiaT6YGquE6X8sSv7hNMWSXYSSU1jGv/yd6XqjXgTDJ8KP4NgjTXfJ3GbRjeeb8RTV7a/VpM+w==
 
-"@jianboy/vscode-web@1.5.10":
+"@jianboy/vscode-web@1.70.2":
   version "1.5.10"
   resolved "https://registry.yarnpkg.com/@jianboy/vscode-web/-/vscode-web-1.5.10.tgz#58d3744d161e7d7607d4372d790d06da9acbf353"
   integrity sha512-xuRRSEbuw3FPce7YbyLr0STWLCPhu7B71WdpXiQVPlZ6PmHa8zQPCaeIYR/cOZUqtWH3cKcciC9aGlA/AySphg==

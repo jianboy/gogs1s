@@ -213,7 +213,6 @@ const gogs1sDefaultTrustedDomains = [
 export function readStaticTrustedDomains(accessor: ServicesAccessor): IStaticTrustedDomains {
 	const storageService = accessor.get(IStorageService);
 	const productService = accessor.get(IProductService);
-	const environmentService = accessor.get(IBrowserWorkbenchEnvironmentService);
 
 	const defaultTrustedDomains: string[] = productService.linkProtectionTrustedDomains
 		? [...productService.linkProtectionTrustedDomains, ...gogs1sDefaultTrustedDomains]
