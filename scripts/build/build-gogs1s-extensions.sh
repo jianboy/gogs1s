@@ -9,6 +9,7 @@ function main() {
 	do
 		if [ -d "$entry" ]
 		then
+			echo ----------------$entry
 			cd $entry
 			yarn compile
 		fi

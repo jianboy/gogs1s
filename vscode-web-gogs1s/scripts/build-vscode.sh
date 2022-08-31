@@ -8,12 +8,12 @@ echo $APP_ROOT
 # build vscode source and vscode builtin extensions
 function main() {
 	cd ${APP_ROOT}
-	rsync -a resources/gulp-gogs1s.js lib/vscode
+	# rsync -a resources/gulp-gogs1s.js lib/vscode
 	cd lib/vscode
-
-	yarn gulp compile-build
-	yarn gulp optimize --gulpfile ./gulp-gogs1s.js
-	yarn gulp minify --gulpfile ./gulp-gogs1s.js
+	yarn gulp vscode-web-min
+	# yarn gulp compile-build
+	# yarn gulp optimize --gulpfile ./gulp-gogs1s.js
+	# yarn gulp minify --gulpfile ./gulp-gogs1s.js
 
 	echo "build vscode done!"
 }
