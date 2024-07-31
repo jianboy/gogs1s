@@ -13,7 +13,8 @@ function main() {
 	fi
 	mkdir -p lib
 	cd lib
-	git clone --depth 1 -b 1.52.1 https://github.com/microsoft/vscode.git vscode
+	git clone --depth 1 -b `cat ${APP_ROOT}/.VERSION` https://github.com/microsoft/vscode.git vscode
+	node ${APP_ROOT}/scripts/patch.js
 	cd vscode
 	yarn --frozen-lockfile
 }

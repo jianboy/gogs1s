@@ -8,7 +8,7 @@ function main() {
 	cd ${APP_ROOT}
 	TARGET="dist/vscode"
 	mkdir -p ${TARGET}
-	rsync -a --del lib/vscode/out-vscode-min/ "${TARGET}"
+	rsync -a --del lib/vscode/out-vscode-web-min/ "${TARGET}"
 
 	echo "copy vscode done!"
 }

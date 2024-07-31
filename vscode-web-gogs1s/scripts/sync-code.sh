@@ -9,7 +9,12 @@ echo $APP_ROOT
 function main() {
 	cd ${APP_ROOT}
 	rsync -a src/ lib/vscode/src
-	# rsync -a extensions/ lib/vscode/extensions
+	if [ -e extensions ]; then
+		rsync -a extensions/ lib/vscode/extensions
+	fi
+	if [ -e build ]; then
+		rsync -a build/ lib/vscode/build
+	fi
 }
 
 main "$@"
